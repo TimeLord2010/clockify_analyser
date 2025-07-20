@@ -14,7 +14,8 @@ class TotalByDay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var dates = {
+    // Get all unique dates from time entries to determine the month/year range
+    var entryDates = {
       for (TimeEntry entry in gainManager.timeEntries)
         DateTime(
           entry.timeInterval.start.year,
@@ -23,14 +24,42 @@ class TotalByDay extends StatelessWidget {
         ),
     }.toList();
 
-    dates.sortByDate((x) => x);
-
-    if (dates.isEmpty) {
+    if (entryDates.isEmpty) {
       return SizedBox.shrink();
     }
 
-    // Calculate the maximum total gain across all dates
-    double maxTotalGain = dates
+    entryDates.sortByDate((x) => x);
+
+    // Get the month and year from the first entry (assuming we want to show the current month)
+    DateTime firstDate = entryDates.first;
+    DateTime lastDate = entryDates.last;
+
+    // Generate all dates for the month range
+    List<DateTime> allDates = [];
+    DateTime currentMonth = DateTime(firstDate.year, firstDate.month, 1);
+    DateTime endMonth = DateTime(
+      lastDate.year,
+      lastDate.month + 1,
+      0,
+    ); // Last day of last month
+
+    while (currentMonth.isBefore(endMonth) ||
+        currentMonth.isAtSameMomentAs(endMonth)) {
+      DateTime lastDayOfMonth = DateTime(
+        currentMonth.year,
+        currentMonth.month + 1,
+        0,
+      );
+
+      for (int day = 1; day <= lastDayOfMonth.day; day++) {
+        allDates.add(DateTime(currentMonth.year, currentMonth.month, day));
+      }
+
+      currentMonth = DateTime(currentMonth.year, currentMonth.month + 1, 1);
+    }
+
+    // Calculate the maximum total gain across all dates (only considering dates with entries)
+    double maxTotalGain = entryDates
         .map((dt) {
           var totals = gainManager.getTotalOnDate(dt.year, dt.month, dt.day);
           return totals.values.fold(0.0, (prev, gain) => prev + gain);
@@ -41,7 +70,7 @@ class TotalByDay extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.only(bottom: 10),
       itemBuilder: (context, index) {
-        var dt = dates.elementAt(index);
+        var dt = allDates.elementAt(index);
         var parts = [
           //dt.month,
           dt.day,
@@ -55,7 +84,9 @@ class TotalByDay extends StatelessWidget {
         );
 
         // Calculate the height based on the proportion of max total gain
-        double barHeightMultiplier = (totalDayGain / maxTotalGain);
+        double barHeightMultiplier = maxTotalGain == 0
+            ? 0
+            : (totalDayGain / maxTotalGain);
 
         String shortWeekDay = switch (dt.weekday) {
           1 => 'SEG',
@@ -103,11 +134,16 @@ class TotalByDay extends StatelessWidget {
           ),
         );
       },
-      itemCount: dates.length,
+      itemCount: allDates.length,
     );
   }
 
-  Column _gainBar(Map<String, double> totals, double totalDayGain) {
+  Widget _gainBar(Map<String, double> totals, double totalDayGain) {
+    // If no totals for this day, return an empty container
+    if (totals.isEmpty || totalDayGain == 0) {
+      return SizedBox.shrink();
+    }
+
     return Column(
       children: totals.entries.map((entry) {
         String projectId = entry.key;
