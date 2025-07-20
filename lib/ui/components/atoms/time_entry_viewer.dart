@@ -194,17 +194,17 @@ class TimeEntryViewer extends StatelessWidget {
   String _formatDate(DateTime dateTime) {
     final months = [
       'Jan',
-      'Feb',
+      'Fev',
       'Mar',
-      'Apr',
-      'May',
+      'Abr',
+      'Mai',
       'Jun',
       'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
+      'Ago',
+      'Set',
+      'Out',
       'Nov',
-      'Dec',
+      'Dez',
     ];
     return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }

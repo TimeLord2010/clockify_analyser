@@ -7,7 +7,9 @@ import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/modules/project_module.dart';
 import 'package:clockify/features/modules/time_entry_module.dart';
 import 'package:clockify/features/modules/user_module.dart';
+import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
+import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/organisms/project_settings.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +47,13 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
       for (var item in projects) item.id: item,
     };
     var rates = LocalStorageModule.customHourlyRates;
+    var gainManager = TimeEntriesGainManager(
+      timeEntries: entries,
+      projects: projects,
+      customHourlyRates: rates,
+      currentUserId: selectedUser?.id,
+    );
+
     return Column(
       children: [
         _filters(),
@@ -52,13 +61,10 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 5),
           height: 60,
-          child: TotalGainByProject(
-            timeEntries: entries,
-            projects: projects,
-            customHourlyRates: rates,
-            currentUserId: selectedUser?.id,
-          ),
+          child: TotalGainByProject(gainManager: gainManager),
         ),
+        Gap(10),
+        SizedBox(height: 120, child: TotalByDay(gainManager: gainManager)),
         Expanded(
           child: ListView.builder(
             itemCount: entries.length,

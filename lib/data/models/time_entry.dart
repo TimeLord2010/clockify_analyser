@@ -1,4 +1,5 @@
 import 'package:clockify/data/models/hourly_rate.dart';
+import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TimeEntry {
   final String description;
@@ -37,7 +38,7 @@ class TimeInterval {
   factory TimeInterval.fromMap(Map<String, dynamic> map) {
     return TimeInterval(
       start: DateTime.parse(map['start']),
-      end: DateTime.parse(map['end']),
+      end: map.tryGetDateTime('end') ?? DateTime.now(),
     );
   }
 }
