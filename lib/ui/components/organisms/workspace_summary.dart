@@ -11,6 +11,7 @@ import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
+import 'package:clockify/ui/components/molecules/trending_times.dart';
 import 'package:clockify/ui/components/organisms/project_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -65,6 +66,9 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
         ),
         Gap(10),
         SizedBox(height: 120, child: TotalByDay(gainManager: gainManager)),
+        Gap(2),
+        SizedBox(height: 200, child: TrendingTimes(gainManager: gainManager)),
+        Gap(5),
         Expanded(
           child: ListView.builder(
             itemCount: entries.length,
