@@ -37,4 +37,16 @@ class LocalStorageModule {
     rates[projectId] = rate;
     customHourlyRates = rates;
   }
+
+  static String? get lastSelectedWorkspaceId {
+    return _sp.getString('last_selected_workspace_id');
+  }
+
+  static set lastSelectedWorkspaceId(String? workspaceId) {
+    if (workspaceId != null) {
+      _sp.setString('last_selected_workspace_id', workspaceId);
+    } else {
+      _sp.remove('last_selected_workspace_id');
+    }
+  }
 }

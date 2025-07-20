@@ -1,4 +1,5 @@
 import 'package:clockify/data/models/workspace.dart';
+import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/modules/workspace_module.dart';
 import 'package:clockify/ui/components/organisms/workspace_summary.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,30 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     WorkspaceModule.findWorkspaces().then((x) {
       workspaces = x;
+      _loadLastSelectedWorkspace();
       updateUi();
     });
     super.initState();
+  }
+
+  void _loadLastSelectedWorkspace() {
+    final lastWorkspaceId = LocalStorageModule.lastSelectedWorkspaceId;
+    if (lastWorkspaceId != null && workspaces != null) {
+      try {
+        selectedWorkspace = workspaces!.firstWhere(
+          (workspace) => workspace.id == lastWorkspaceId,
+        );
+      } catch (e) {
+        // Workspace not found, clear the saved preference
+        LocalStorageModule.lastSelectedWorkspaceId = null;
+      }
+    }
+  }
+
+  void _onWorkspaceChanged(Workspace? workspace) {
+    selectedWorkspace = workspace;
+    LocalStorageModule.lastSelectedWorkspaceId = workspace?.id;
+    updateUi();
   }
 
   @override
@@ -41,10 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
             ],
-            onChanged: (value) {
-              selectedWorkspace = value;
-              updateUi();
-            },
+            onChanged: _onWorkspaceChanged,
           ),
         ],
       ),
