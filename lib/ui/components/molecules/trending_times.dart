@@ -2,17 +2,40 @@ import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
+/// A widget that displays a heatmap-style visualization of time entries across different weekdays and time slots.
+///
+/// This component provides a grid representation of time entry trends, showing the percentage
+/// of days with time entries for each weekday and specific time slot. It helps users understand
+/// their work patterns and time distribution throughout the week.
+///
+/// The visualization uses color intensity to represent the frequency of time entries:
+/// - Transparent cells indicate no time entries
+/// - Lighter blue cells represent fewer time entries
+/// - Darker blue cells represent more frequent time entries
 class TrendingTimes extends StatelessWidget {
+  /// Creates a TrendingTimes widget.
+  ///
+  /// [gainManager] provides the time entries and project data for analysis.
+  /// [timeGranularityMinutes] defines the size of each time slot (default is 30 minutes).
   const TrendingTimes({
     super.key,
     required this.gainManager,
     this.timeGranularityMinutes = 30,
   });
 
+  /// Manages time entries and provides access to project information.
   final TimeEntriesGainManager gainManager;
+
+  /// The granularity of time slots in minutes.
+  ///
+  /// Determines how time is divided for trend analysis.
+  /// For example, 30 minutes means the day is divided into 30-minute intervals.
   final int timeGranularityMinutes;
 
+  /// Width of the weekday column in the grid.
   final double _weekdayColumnWidth = 60;
+
+  /// Width of each time slot column in the grid.
   final double _columnWidth = 45;
 
   @override
