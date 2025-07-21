@@ -3,16 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TrendingTimes extends StatelessWidget {
-  const TrendingTimes({super.key, required this.gainManager});
+  const TrendingTimes({
+    super.key,
+    required this.gainManager,
+    this.timeGranularityMinutes = 30,
+  });
 
   final TimeEntriesGainManager gainManager;
+  final int timeGranularityMinutes;
 
   final double _weekdayColumnWidth = 60;
   final double _columnWidth = 45;
 
   @override
   Widget build(BuildContext context) {
-    // Generate time slots (30-minute intervals from 00:00 to 23:30)
+    // Generate time slots based on the configured granularity
     final allTimeSlots = _generateTimeSlots();
 
     // Calculate trending data
@@ -53,7 +58,7 @@ class TrendingTimes extends StatelessWidget {
   List<String> _generateTimeSlots() {
     final slots = <String>[];
     for (int hour = 0; hour < 24; hour++) {
-      for (int minute = 0; minute < 60; minute += 30) {
+      for (int minute = 0; minute < 60; minute += timeGranularityMinutes) {
         final timeString =
             '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
         slots.add(timeString);
@@ -140,7 +145,9 @@ class TrendingTimes extends StatelessWidget {
           slotTime.hour,
           slotTime.minute,
         );
-        final slotEnd = slotStart.add(Duration(minutes: 30));
+        final slotEnd = slotStart.add(
+          Duration(minutes: timeGranularityMinutes),
+        );
 
         // Check if entry overlaps with this time slot
         if (_timeRangesOverlap(startTime, endTime, slotStart, slotEnd)) {
@@ -365,7 +372,7 @@ class TrendingTimes extends StatelessWidget {
         slotTime.hour,
         slotTime.minute,
       );
-      final slotEnd = slotStart.add(Duration(minutes: 30));
+      final slotEnd = slotStart.add(Duration(minutes: timeGranularityMinutes));
 
       // Check if entry overlaps with this time slot
       if (_timeRangesOverlap(startTime, endTime, slotStart, slotEnd)) {
