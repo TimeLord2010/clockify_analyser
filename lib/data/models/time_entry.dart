@@ -37,8 +37,8 @@ class TimeInterval {
 
   factory TimeInterval.fromMap(Map<String, dynamic> map) {
     return TimeInterval(
-      start: DateTime.parse(map['start']),
-      end: map.tryGetDateTime('end') ?? DateTime.now(),
+      start: DateTime.parse(map['start']).toLocal(),
+      end: map.tryGetDateTime('end')?.toLocal() ?? DateTime.now(),
     );
   }
 }
