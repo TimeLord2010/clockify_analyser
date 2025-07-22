@@ -9,6 +9,7 @@ import 'package:clockify/features/modules/time_entry_module.dart';
 import 'package:clockify/features/modules/user_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
+import 'package:clockify/ui/components/molecules/date_range_picker.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/molecules/trending_times.dart';
@@ -31,13 +32,18 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
   List<User> users = [];
   List<TimeEntry> entries = [];
 
-  var dt = DateTime.now();
+  late DateTime startDate;
+  late DateTime endDate;
 
   User? selectedUser;
   Project? selectedProject;
 
   @override
   void initState() {
+    // Initialize date range to current month
+    var now = DateTime.now();
+    startDate = DateTime(now.year, now.month, 1);
+    endDate = DateTime(now.year, now.month + 1, 0);
     _setup();
     super.initState();
   }
@@ -118,7 +124,7 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
                   children: [
                     _projectFilter(),
                     Gap(8),
-                    // TODO: Date range picker
+                    _dateRangePicker(),
                     Gap(8),
                     _projectSettingsButton(),
                   ],
@@ -133,7 +139,7 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
               Gap(8),
               _projectSettingsButton(),
               Spacer(),
-              // TODO: Date range picker
+              _dateRangePicker(),
               Spacer(),
               _userFilter(),
             ],
@@ -187,6 +193,18 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
     );
   }
 
+  Widget _dateRangePicker() {
+    return DateRangePicker(
+      startDate: startDate,
+      endDate: endDate,
+      onDateRangeChanged: (newStartDate, newEndDate) {
+        startDate = newStartDate;
+        endDate = newEndDate;
+        _loadEntries();
+      },
+    );
+  }
+
   LimitedBox _userFilter() {
     return LimitedBox(
       maxWidth: 250,
@@ -223,8 +241,8 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
     entries = await TimeEntryModule.findFromUser(
       workspaceId: widget.workspace.id,
       userId: userId,
-      month: dt.month,
-      year: dt.year,
+      startDate: startDate,
+      endDate: endDate,
     );
     updateUi();
   }

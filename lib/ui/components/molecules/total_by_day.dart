@@ -66,14 +66,18 @@ class TotalByDay extends StatelessWidget {
         })
         .reduce(max);
 
+    var monthsInEntries = {for (var entry in entryDates) entry.month};
+    var shouldShowMonth = monthsInEntries.length > 1;
+
     return ListView.builder(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.only(bottom: 10),
       itemBuilder: (context, index) {
         var dt = allDates.elementAt(index);
+
         var parts = [
-          //dt.month,
           dt.day,
+          if (shouldShowMonth) dt.month,
         ].map((x) => x.toString().padLeft(2, '0'));
         var totals = gainManager.getTotalOnDate(dt.year, dt.month, dt.day);
 
@@ -102,7 +106,7 @@ class TotalByDay extends StatelessWidget {
           message: 'Total: ${totalDayGain.toStringAsFixed(2)}',
           preferBelow: false,
           child: SizedBox(
-            width: 40,
+            width: shouldShowMonth ? 50 : 40,
             child: Column(
               children: [
                 // Vertical bar with project colors
