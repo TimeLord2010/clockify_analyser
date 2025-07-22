@@ -42,6 +42,19 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
     super.initState();
   }
 
+  void _loadLastSelectedUser() {
+    final lastUserId = LocalStorageModule.lastSelectedUserId;
+    if (lastUserId != null && users.isNotEmpty) {
+      try {
+        selectedUser = users.firstWhere((user) => user.id == lastUserId);
+        _loadEntries();
+      } catch (e) {
+        // User not found, clear the saved preference
+        LocalStorageModule.lastSelectedUserId = null;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     var projectMap = <String, Project>{
@@ -182,6 +195,7 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
         ],
         onChanged: (value) {
           selectedUser = value;
+          LocalStorageModule.lastSelectedUserId = value?.id;
           updateUi();
 
           _loadEntries();
@@ -192,6 +206,8 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
 
   Future<void> _setup() async {
     await Future.wait([_loadProjects(), _loadUsers()]);
+    _loadLastSelectedUser();
+    updateUi();
   }
 
   Future<void> _loadEntries() async {

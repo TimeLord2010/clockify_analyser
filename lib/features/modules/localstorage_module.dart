@@ -49,4 +49,16 @@ class LocalStorageModule {
       _sp.remove('last_selected_workspace_id');
     }
   }
+
+  static String? get lastSelectedUserId {
+    return _sp.getString('last_selected_user_id');
+  }
+
+  static set lastSelectedUserId(String? userId) {
+    if (userId != null) {
+      _sp.setString('last_selected_user_id', userId);
+    } else {
+      _sp.remove('last_selected_user_id');
+    }
+  }
 }
