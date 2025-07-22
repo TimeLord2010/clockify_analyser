@@ -118,6 +118,8 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
                   children: [
                     _projectFilter(),
                     Gap(8),
+                    // TODO: Date range picker
+                    Gap(8),
                     _projectSettingsButton(),
                   ],
                 ),
@@ -130,6 +132,8 @@ class _WorkspaceSummaryState extends State<WorkspaceSummary> {
               _projectFilter(),
               Gap(8),
               _projectSettingsButton(),
+              Spacer(),
+              // TODO: Date range picker
               Spacer(),
               _userFilter(),
             ],

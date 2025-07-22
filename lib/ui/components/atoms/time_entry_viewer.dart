@@ -1,7 +1,9 @@
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/data/models/time_entry.dart';
 import 'package:clockify/features/repositories/time_entry_gain_manager.dart';
+import 'package:clockify/features/usecases/date/format_time.dart';
 import 'package:flutter/material.dart';
+import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TimeEntryViewer extends StatelessWidget {
   const TimeEntryViewer({
@@ -118,7 +120,7 @@ class TimeEntryViewer extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${_formatTime(entry.timeInterval.start)} - ${_formatTime(entry.timeInterval.end)}',
+                            '${formatTime(entry.timeInterval.start)} - ${formatTime(entry.timeInterval.end)}',
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -136,7 +138,7 @@ class TimeEntryViewer extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _formatDate(entry.timeInterval.start),
+                            entry.timeInterval.start.formatAsReadable(false),
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
@@ -183,29 +185,5 @@ class TimeEntryViewer extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  String _formatDate(DateTime dateTime) {
-    final months = [
-      'Jan',
-      'Fev',
-      'Mar',
-      'Abr',
-      'Mai',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Set',
-      'Out',
-      'Nov',
-      'Dez',
-    ];
-    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }
 }
