@@ -3,8 +3,8 @@ import 'package:clockify/data/models/user.dart';
 import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
-import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
 import 'package:clockify/ui/components/molecules/date_range_picker.dart';
+import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/molecules/trending_times.dart';
@@ -57,9 +57,6 @@ class WorkspaceSummary extends ConsumerWidget {
     TimeEntriesGainManager gainManager,
     Map<String, Project> projectMap,
   ) {
-    var selectedUser = ref.watch(selectedUserProvider(workspace.id));
-    var rates = LocalStorageModule.customHourlyRates;
-
     return Column(
       children: [
         _filters(context, ref),
@@ -74,24 +71,7 @@ class WorkspaceSummary extends ConsumerWidget {
         Gap(2),
         SizedBox(height: 200, child: TrendingTimes(gainManager: gainManager)),
         Gap(5),
-        Expanded(
-          child: ListView.builder(
-            itemCount: entries.length,
-            itemBuilder: (context, index) {
-              var item = entries.elementAt(index);
-              var project = projectMap[item.projectId];
-
-              return TimeEntryViewer(
-                entry: item,
-                customHourlyRate: rates[project?.id],
-                membership: project?.memberships.firstWhere(
-                  (x) => x.userId == selectedUser?.id,
-                ),
-                project: project,
-              );
-            },
-          ),
-        ),
+        Expanded(child: GroupedEntriesChart(workspaceId: workspace.id)),
       ],
     );
   }
