@@ -36,6 +36,14 @@ class Project {
       memberships: map.getList('memberships', (x) => Membership.fromMap(x)),
     );
   }
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is Project && other.id == id;
+  }
 }
 
 class Membership {

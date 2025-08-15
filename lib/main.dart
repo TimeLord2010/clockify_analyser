@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:clockify/ui/components/screens/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,11 +17,13 @@ Future<void> main() async {
   debugPrint('Setup elapsed: ${elapsed}ms');
 
   runApp(
-    MaterialApp(
-      scrollBehavior: MaterialScrollBehavior().copyWith(
-        dragDevices: PointerDeviceKind.values.toSet(),
+    ProviderScope(
+      child: MaterialApp(
+        scrollBehavior: MaterialScrollBehavior().copyWith(
+          dragDevices: PointerDeviceKind.values.toSet(),
+        ),
+        home: MainScreen(),
       ),
-      home: MainScreen(),
     ),
   );
 }
