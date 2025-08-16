@@ -1,13 +1,32 @@
+import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:flutter/material.dart';
 
-class TotalGainByProject extends StatelessWidget {
+class TotalGainByProject extends StatefulWidget {
   const TotalGainByProject({super.key, required this.gainManager});
   final TimeEntriesGainManager gainManager;
 
-  Map<Project, Duration> get projectTotals => gainManager.projectTotals;
-  Duration get totalDuration => gainManager.totalDuration;
+  @override
+  State<TotalGainByProject> createState() => _TotalGainByProjectState();
+}
+
+class _TotalGainByProjectState extends State<TotalGainByProject> {
+  Map<Project, Duration> get projectTotals => widget.gainManager.projectTotals;
+
+  Duration get totalDuration => widget.gainManager.totalDuration;
+  bool showGain = false;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration(milliseconds: 50), () {
+        showGain = true;
+        setState(() {});
+      });
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +35,7 @@ class TotalGainByProject extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final totalGain = gainManager.totalGain;
+    final totalGain = widget.gainManager.totalGain;
 
     return Tooltip(
       message: 'Total: \$${totalGain.toStringAsFixed(2)}',
@@ -46,7 +65,7 @@ class TotalGainByProject extends StatelessWidget {
         Project project = entry.key;
         Duration duration = entry.value;
 
-        double gain = gainManager.getProjectGain(project);
+        double gain = widget.gainManager.getProjectGain(project);
         double percentage = duration.inSeconds / totalDuration.inSeconds;
         double barWidth = constraints.maxWidth * percentage;
 
@@ -95,7 +114,7 @@ class TotalGainByProject extends StatelessWidget {
               // Calculate percentage of total time
               double percentage = duration.inSeconds / totalDuration.inSeconds;
               double barWidth = constraints.maxWidth * percentage;
-              double gain = gainManager.getProjectGain(project);
+              double gain = widget.gainManager.getProjectGain(project);
 
               // Determine if bar is wide enough to show text (minimum 80px for readable text)
               bool showTextInBar = barWidth >= 100;
@@ -105,23 +124,7 @@ class TotalGainByProject extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(color: project.color),
                   child: showTextInBar
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 4.0,
-                            ),
-                            child: Text(
-                              '\$${gain.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _getContrastColor(project.color),
-                              ),
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
+                      ? Center(child: _valueInBar(gain, project))
                       : null,
                 ),
               );
@@ -129,6 +132,19 @@ class TotalGainByProject extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _valueInBar(double gain, Project project) {
+    return AnimatedFlipCounter(
+      value: showGain ? gain : 0,
+      duration: Duration(milliseconds: (gain.toInt()).clamp(500, 1500)),
+      prefix: '\$',
+      textStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        color: _getContrastColor(project.color),
+      ),
     );
   }
 

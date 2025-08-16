@@ -4,6 +4,7 @@ import 'package:clockify/data/models/project.dart';
 import 'package:clockify/data/models/time_entry.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
@@ -117,10 +118,24 @@ class TotalByDay extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          return SizedBox(
-                            width: 15,
-                            height: barHeightMultiplier * constraints.maxHeight,
-                            child: _gainBar(totals, totalDayGain),
+                          var barHeight =
+                              barHeightMultiplier * constraints.maxHeight;
+                          var effectDalay = Duration(milliseconds: index * 100);
+                          return Animate(
+                            effects: [
+                              ScaleEffect(
+                                delay: effectDalay,
+                                curve: Curves.decelerate,
+                                begin: Offset(1, 0),
+                                end: Offset(1, 1),
+                                alignment: Alignment.bottomCenter,
+                              ),
+                            ],
+                            child: SizedBox(
+                              width: 15,
+                              height: barHeight,
+                              child: _gainBar(totals, totalDayGain),
+                            ),
                           );
                         },
                       ),
