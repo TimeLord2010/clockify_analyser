@@ -71,7 +71,7 @@ class TotalByDay extends StatelessWidget {
 
     return ListView.builder(
       scrollDirection: Axis.horizontal,
-      padding: EdgeInsets.only(bottom: 10),
+      padding: EdgeInsets.only(bottom: 5),
       itemBuilder: (context, index) {
         var dt = allDates.elementAt(index);
 
@@ -106,7 +106,7 @@ class TotalByDay extends StatelessWidget {
           message: 'Total: ${totalDayGain.toStringAsFixed(2)}',
           preferBelow: false,
           child: SizedBox(
-            width: shouldShowMonth ? 50 : 40,
+            width: shouldShowMonth ? 50 : 35,
             child: Column(
               children: [
                 // Vertical bar with project colors
@@ -114,11 +114,11 @@ class TotalByDay extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
+                      borderRadius: BorderRadius.circular(12),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           return SizedBox(
-                            width: 20,
+                            width: 15,
                             height: barHeightMultiplier * constraints.maxHeight,
                             child: _gainBar(totals, totalDayGain),
                           );
@@ -128,10 +128,10 @@ class TotalByDay extends StatelessWidget {
                   ),
                 ),
                 Gap(5),
-                Text(parts.join('/')),
+                Text(parts.join('/'), style: TextStyle(fontSize: 11)),
                 Text(
                   shortWeekDay,
-                  style: TextStyle(color: Colors.grey, fontSize: 11),
+                  style: TextStyle(color: Colors.grey, fontSize: 10),
                 ),
               ],
             ),
