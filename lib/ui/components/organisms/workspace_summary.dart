@@ -1,8 +1,8 @@
 import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/user.dart';
 import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/molecules/date_range_picker.dart';
 import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
@@ -13,7 +13,6 @@ import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
-import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -84,17 +83,12 @@ class WorkspaceSummary extends ConsumerWidget {
           var width = constraints.maxWidth;
           if (width < 500) {
             // Thin layout
-            return Column(
+            return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    _dateRangePicker(ref),
-                    Gap(8),
-                    _projectsSettingsButton(context),
-                  ],
-                ),
-                _userFilter(),
+                _dateRangePicker(ref),
+                Spacer(),
+                _projectsSettingsButton(context),
               ],
             );
           }
@@ -105,7 +99,7 @@ class WorkspaceSummary extends ConsumerWidget {
               Gap(8),
               _dateRangePicker(ref),
               Spacer(),
-              _userFilter(),
+              SelectedUserPicker(workspace: workspace),
               Gap(10),
               _projectsSettingsButton(context),
             ],
@@ -140,48 +134,6 @@ class WorkspaceSummary extends ConsumerWidget {
             .read(dateRangeProvider.notifier)
             .updateDateRange(newStartDate, newEndDate);
       },
-    );
-  }
-
-  Widget _userFilter() {
-    return LimitedBox(
-      maxWidth: 250,
-      child: Consumer(
-        builder: (context, ref, child) {
-          var usersAsync = ref.watch(usersProvider(workspace.id));
-          var selectedUser = ref.watch(selectedUserProvider(workspace.id));
-
-          return usersAsync.when(
-            data: (users) {
-              return DropdownButton<User>(
-                value: selectedUser,
-                icon: Icon(Icons.person),
-                items: [
-                  for (var item in users)
-                    DropdownMenuItem(value: item, child: Text(item.name)),
-                ],
-                onChanged: (value) {
-                  ref
-                      .read(selectedUserProvider(workspace.id).notifier)
-                      .selectUser(value);
-                },
-              );
-            },
-            loading: () => DropdownButton<User>(
-              value: null,
-              icon: Icon(Icons.person),
-              items: [],
-              onChanged: null,
-            ),
-            error: (error, stack) => DropdownButton<User>(
-              value: null,
-              icon: Icon(Icons.person),
-              items: [],
-              onChanged: null,
-            ),
-          );
-        },
-      ),
     );
   }
 }
