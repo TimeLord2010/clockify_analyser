@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:clockify/data/models/time_entry.dart';
+import 'package:clockify/features/usecases/duration/format_duration.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -64,141 +67,51 @@ class GroupedEntriesChart extends ConsumerWidget {
     final groupedData = _groupEntriesByDescription(entries);
     final pieChartSections = _createPieChartSections(context, groupedData);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Determine if we should use horizontal or vertical layout
-          // Use horizontal layout if width is significantly larger than height
-          final useHorizontalLayout =
-              constraints.maxWidth > constraints.maxHeight * 1.2 &&
-              constraints.maxWidth > 600;
-
-          if (useHorizontalLayout) {
-            return _buildHorizontalLayout(
-              context,
-              groupedData,
-              pieChartSections,
-            );
-          } else {
-            return _buildVerticalLayout(context, groupedData, pieChartSections);
-          }
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var width = constraints.maxWidth;
+        double spacing = 20;
+        double legendSpace = (width * (2 / 3)).clamp(100, 500);
+        var chartSpace = width - (legendSpace + spacing);
+        return Row(
+          children: [
+            SizedBox(width: chartSpace, child: _chart(pieChartSections)),
+            const Gap(20),
+            SizedBox(width: legendSpace, child: _legends(context, groupedData)),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildVerticalLayout(
-    BuildContext context,
-    Map<String, Duration> groupedData,
-    List<PieChartSectionData> pieChartSections,
-  ) {
-    return Column(
-      children: [
-        // Pie Chart
-        Expanded(
-          flex: 3,
-          child: PieChart(
-            PieChartData(
-              sections: pieChartSections,
-              centerSpaceRadius: 60,
-              sectionsSpace: 2,
-              pieTouchData: PieTouchData(
-                touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                  // Handle touch events if needed
-                },
-              ),
+  LayoutBuilder _chart(List<PieChartSectionData> pieChartSections) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chartSize = min(constraints.maxHeight, constraints.maxWidth);
+
+        final centerSpaceRadius = _calculateCenterSpaceRadius(chartSize);
+        final radius = _calculateRadius(chartSize);
+
+        // Update sections with calculated radius
+        final responsiveSections = _updateSectionsRadius(
+          pieChartSections,
+          radius,
+        );
+
+        return PieChart(
+          PieChartData(
+            sections: responsiveSections,
+            centerSpaceRadius: centerSpaceRadius,
+            sectionsSpace: 2,
+            pieTouchData: PieTouchData(
+              touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                // Handle touch events if needed
+              },
             ),
           ),
-        ),
-        const Gap(20),
-        // Legend below the chart
-        Expanded(flex: 2, child: _buildLegend(context, groupedData)),
-      ],
+        );
+      },
     );
-  }
-
-  Widget _buildHorizontalLayout(
-    BuildContext context,
-    Map<String, Duration> groupedData,
-    List<PieChartSectionData> pieChartSections,
-  ) {
-    return Row(
-      children: [
-        // Pie Chart on the left
-        Expanded(
-          flex: 2,
-          child: PieChart(
-            PieChartData(
-              sections: pieChartSections,
-              centerSpaceRadius: 60,
-              sectionsSpace: 2,
-              pieTouchData: PieTouchData(
-                touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                  // Handle touch events if needed
-                },
-              ),
-            ),
-          ),
-        ),
-        const Gap(20),
-        // Legend on the right
-        Expanded(flex: 1, child: _buildLegend(context, groupedData)),
-      ],
-    );
-  }
-
-  Map<String, Duration> _groupEntriesByDescription(List<TimeEntry> entries) {
-    final Map<String, Duration> grouped = {};
-
-    for (final entry in entries) {
-      final description = entry.description.isEmpty
-          ? '(No description)'
-          : entry.description;
-
-      if (grouped.containsKey(description)) {
-        grouped[description] =
-            grouped[description]! + entry.timeInterval.duration;
-      } else {
-        grouped[description] = entry.timeInterval.duration;
-      }
-    }
-
-    // Calculate total duration for percentage calculations
-    final totalDuration = grouped.values.fold<Duration>(
-      Duration.zero,
-      (sum, duration) => sum + duration,
-    );
-
-    // Filter out entries that represent less than 5% of total time
-    final filteredGrouped = <String, Duration>{};
-    Duration othersTotal = Duration.zero;
-
-    double percentageToIgnore = 5;
-
-    for (final entry in grouped.entries) {
-      final percentage =
-          (entry.value.inMinutes / totalDuration.inMinutes) * 100;
-
-      if (percentage >= percentageToIgnore) {
-        filteredGrouped[entry.key] = entry.value;
-      } else {
-        othersTotal += entry.value;
-      }
-    }
-
-    // Add "Others" category if there are filtered entries
-    if (othersTotal > Duration.zero) {
-      filteredGrouped['Others'] = othersTotal;
-    }
-
-    // Sort by duration (descending)
-    final sortedEntries = Map.fromEntries(
-      filteredGrouped.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value)),
-    );
-
-    return sortedEntries;
   }
 
   List<PieChartSectionData> _createPieChartSections(
@@ -238,14 +151,14 @@ class GroupedEntriesChart extends ConsumerWidget {
           color: color,
           value: entry.value.inMinutes.toDouble(),
           title: '${percentage.toStringAsFixed(1)}%',
-          radius: 80,
+          radius: 50,
           titleStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.white,
             shadows: [
               Shadow(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black.withAlpha(100),
                 offset: const Offset(1, 1),
                 blurRadius: 2,
               ),
@@ -260,7 +173,7 @@ class GroupedEntriesChart extends ConsumerWidget {
     return sections;
   }
 
-  Widget _buildLegend(BuildContext context, Map<String, Duration> groupedData) {
+  Widget _legends(BuildContext context, Map<String, Duration> groupedData) {
     final theme = Theme.of(context);
     final colors = [
       theme.colorScheme.primary,
@@ -277,12 +190,13 @@ class GroupedEntriesChart extends ConsumerWidget {
 
     return ListView.builder(
       itemCount: groupedData.length,
+      padding: EdgeInsets.fromLTRB(0, 0, 10, 20),
       itemBuilder: (context, index) {
         final entry = groupedData.entries.elementAt(index);
         final color = colors[index % colors.length];
 
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
               Container(
@@ -299,11 +213,17 @@ class GroupedEntriesChart extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text(
-                _formatDuration(entry.value),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.primary,
+              SizedBox(
+                width: 70,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    formatDuration(entry.value),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -313,14 +233,97 @@ class GroupedEntriesChart extends ConsumerWidget {
     );
   }
 
-  String _formatDuration(Duration duration) {
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
+  Map<String, Duration> _groupEntriesByDescription(List<TimeEntry> entries) {
+    final Map<String, Duration> grouped = {};
 
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    } else {
-      return '${minutes}m';
+    for (final entry in entries) {
+      final description = entry.description.isEmpty
+          ? '(No description)'
+          : entry.description;
+
+      if (grouped.containsKey(description)) {
+        grouped[description] =
+            grouped[description]! + entry.timeInterval.duration;
+      } else {
+        grouped[description] = entry.timeInterval.duration;
+      }
     }
+
+    // Calculate total duration for percentage calculations
+    final totalDuration = grouped.values.fold<Duration>(
+      Duration.zero,
+      (sum, duration) => sum + duration,
+    );
+
+    /// Filter out entries that represent less than the specified percentage
+    /// of total time
+    final filteredGrouped = <String, Duration>{};
+    Duration othersTotal = Duration.zero;
+
+    double percentageToIgnore = 3;
+
+    for (final entry in grouped.entries) {
+      final percentage =
+          (entry.value.inMinutes / totalDuration.inMinutes) * 100;
+
+      if (percentage >= percentageToIgnore) {
+        filteredGrouped[entry.key] = entry.value;
+      } else {
+        othersTotal += entry.value;
+      }
+    }
+
+    // Add "Others" category if there are filtered entries
+    if (othersTotal > Duration.zero) {
+      filteredGrouped['Others'] = othersTotal;
+    }
+
+    // Sort by duration (descending)
+    final sortedEntries = Map.fromEntries(
+      filteredGrouped.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value)),
+    );
+
+    return sortedEntries;
+  }
+
+  /// Calculate responsive center space radius based on available chart size
+  double _calculateCenterSpaceRadius(double chartSize) {
+    // Use a percentage of the chart size for center space
+    final calculatedRadius = (chartSize * 0.2).clamp(10.0, 80.0);
+    return calculatedRadius;
+  }
+
+  /// Calculate responsive radius based on available chart size
+  double _calculateRadius(double chartSize) {
+    // Use a percentage of the chart size for radius
+    final calculatedRadius = (chartSize * 0.25).clamp(25.0, 100.0);
+    return calculatedRadius;
+  }
+
+  /// Update pie chart sections with new radius and conditionally show/hide titles
+  List<PieChartSectionData> _updateSectionsRadius(
+    List<PieChartSectionData> sections,
+    double radius,
+  ) {
+    final showTitles = radius >= 60;
+
+    return sections.map((section) {
+      return PieChartSectionData(
+        color: section.color,
+        value: section.value,
+        title: showTitles
+            ? section.title
+            : '', // Hide title if radius is too small
+        radius: radius,
+        titleStyle: section.titleStyle,
+        badgeWidget: section.badgeWidget,
+        badgePositionPercentageOffset: section.badgePositionPercentageOffset,
+        borderSide: section.borderSide,
+        gradient: section.gradient,
+        showTitle: showTitles,
+        titlePositionPercentageOffset: section.titlePositionPercentageOffset,
+      );
+    }).toList();
   }
 }
