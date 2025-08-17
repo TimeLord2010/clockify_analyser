@@ -2,6 +2,7 @@ import 'package:clockify/data/models/time_entry.dart';
 import 'package:clockify/features/modules/time_entry_module.dart';
 import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
+import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Parameters for time entries request
@@ -50,18 +51,22 @@ final timeEntriesProvider =
       );
     });
 
-// Convenience provider that combines workspace, selected user, and date range
-final timeEntriesForWorkspaceProvider =
-    FutureProvider.family<List<TimeEntry>, String>((ref, workspaceId) async {
-      final selectedUser = ref.watch(selectedUserProvider(workspaceId));
-      final dateRange = ref.watch(dateRangeProvider);
+// Main provider that combines selected workspace, selected user, and date range
+final timeEntriesForWorkspaceProvider = FutureProvider<List<TimeEntry>>((
+  ref,
+) async {
+  final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
+  final selectedUser = ref.watch(selectedUserProvider);
+  final dateRange = ref.watch(dateRangeProvider);
 
-      if (selectedUser == null) {
-        return [];
+  return selectedWorkspaceAsync.when(
+    data: (workspace) async {
+      if (workspace == null || selectedUser == null) {
+        return <TimeEntry>[];
       }
 
       final params = TimeEntriesParams(
-        workspaceId: workspaceId,
+        workspaceId: workspace.id,
         userId: selectedUser.id,
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
@@ -70,7 +75,11 @@ final timeEntriesForWorkspaceProvider =
       final timeEntriesAsync = ref.watch(timeEntriesProvider(params));
       return timeEntriesAsync.when(
         data: (entries) => entries,
-        loading: () => [],
-        error: (error, stack) => [],
+        loading: () => <TimeEntry>[],
+        error: (error, stack) => <TimeEntry>[],
       );
-    });
+    },
+    loading: () => <TimeEntry>[],
+    error: (error, stack) => <TimeEntry>[],
+  );
+});

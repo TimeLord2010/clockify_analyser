@@ -1,6 +1,5 @@
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/data/models/user.dart';
-import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
@@ -11,9 +10,7 @@ import 'package:gap/gap.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class ProjectsSettings extends ConsumerStatefulWidget {
-  const ProjectsSettings({super.key, required this.workspace});
-
-  final Workspace workspace;
+  const ProjectsSettings({super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -23,8 +20,6 @@ class ProjectsSettings extends ConsumerStatefulWidget {
 
 class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
   final Map<Project, TextEditingController> controllers = {};
-
-  Workspace get workspace => widget.workspace;
 
   @override
   void dispose() {
@@ -36,7 +31,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
 
   @override
   Widget build(BuildContext context) {
-    var selectedUser = ref.watch(selectedUserProvider(workspace.id));
+    var selectedUser = ref.watch(selectedUserProvider);
     return Scaffold(
       appBar: AppBar(title: Text('Projects')),
       body: Padding(
@@ -45,7 +40,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
           children: [
             Align(
               alignment: Alignment.centerRight,
-              child: SelectedUserPicker(workspace: workspace),
+              child: SelectedUserPicker(),
             ),
             Gap(10),
             Expanded(child: _projectsHourly(selectedUser)),
@@ -56,7 +51,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
   }
 
   Widget _projectsHourly(User? selectedUser) {
-    var projects = ref.watch(projectsProvider(workspace));
+    var projects = ref.watch(projectsProvider);
 
     if (selectedUser == null) {
       return Center(child: Text('Select a user'));
@@ -133,7 +128,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
           LocalStorageModule.setHourlyRate(project.id, value);
 
           // Updating projects provider
-          var read = ref.read(projectsProvider(widget.workspace).notifier);
+          var read = ref.read(projectsProvider.notifier);
           read.updateHourly(project, userId, value);
         }
       },

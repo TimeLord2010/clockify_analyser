@@ -3,26 +3,23 @@ import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final selectedUserProvider =
-    StateNotifierProvider.family<SelectedUserNotifier, User?, String>((
-      ref,
-      workspaceId,
-    ) {
-      return SelectedUserNotifier(ref, workspaceId);
-    });
+final selectedUserProvider = StateNotifierProvider<SelectedUserNotifier, User?>(
+  (ref) {
+    return SelectedUserNotifier(ref);
+  },
+);
 
 class SelectedUserNotifier extends StateNotifier<User?> {
-  SelectedUserNotifier(this.ref, this.workspaceId) : super(null) {
+  SelectedUserNotifier(this.ref) : super(null) {
     _initialize();
   }
 
   final Ref ref;
-  final String workspaceId;
   bool _hasInitialized = false;
 
   void _initialize() {
     // Watch users and auto-initialize when they're loaded
-    ref.listen(usersProvider(workspaceId), (previous, next) {
+    ref.listen(usersProvider, (previous, next) {
       next.whenData((users) {
         if (!_hasInitialized && state == null && users.isNotEmpty) {
           _hasInitialized = true;

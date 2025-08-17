@@ -9,15 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 class GroupedEntriesChart extends ConsumerWidget {
-  const GroupedEntriesChart({super.key, required this.workspaceId});
-
-  final String workspaceId;
+  const GroupedEntriesChart({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entriesAsync = ref.watch(
-      timeEntriesForWorkspaceProvider(workspaceId),
-    );
+    final entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
 
     return entriesAsync.when(
       data: (entries) => _buildChart(context, entries),

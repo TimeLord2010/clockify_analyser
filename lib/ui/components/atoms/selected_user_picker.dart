@@ -1,19 +1,16 @@
 import 'package:clockify/data/models/user.dart';
-import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SelectedUserPicker extends ConsumerWidget {
-  const SelectedUserPicker({super.key, required this.workspace});
-
-  final Workspace workspace;
+  const SelectedUserPicker({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var usersAsync = ref.watch(usersProvider(workspace.id));
-    var selectedUser = ref.watch(selectedUserProvider(workspace.id));
+    var usersAsync = ref.watch(usersProvider);
+    var selectedUser = ref.watch(selectedUserProvider);
     return LimitedBox(
       maxWidth: 250,
       child: usersAsync.when(
@@ -26,9 +23,7 @@ class SelectedUserPicker extends ConsumerWidget {
                 DropdownMenuItem(value: item, child: Text(item.name)),
             ],
             onChanged: (value) {
-              ref
-                  .read(selectedUserProvider(workspace.id).notifier)
-                  .selectUser(value);
+              ref.read(selectedUserProvider.notifier).selectUser(value);
             },
           );
         },

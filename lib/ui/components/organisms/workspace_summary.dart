@@ -1,5 +1,4 @@
 import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
@@ -18,15 +17,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
 class WorkspaceSummary extends ConsumerWidget {
-  const WorkspaceSummary({super.key, required this.workspace});
-
-  final Workspace workspace;
+  const WorkspaceSummary({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var projects = ref.watch(projectsProvider(workspace));
-    var entriesAsync = ref.watch(timeEntriesForWorkspaceProvider(workspace.id));
-    var selectedUser = ref.watch(selectedUserProvider(workspace.id));
+    var projects = ref.watch(projectsProvider);
+    var entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
+    var selectedUser = ref.watch(selectedUserProvider);
     var projectMap = <String, Project>{
       for (var item in projects) item.id: item,
     };
@@ -70,7 +67,7 @@ class WorkspaceSummary extends ConsumerWidget {
         Gap(2),
         SizedBox(height: 200, child: TrendingTimes(gainManager: gainManager)),
         Gap(5),
-        Expanded(child: GroupedEntriesChart(workspaceId: workspace.id)),
+        Expanded(child: GroupedEntriesChart()),
       ],
     );
   }
@@ -99,7 +96,7 @@ class WorkspaceSummary extends ConsumerWidget {
               Gap(8),
               _dateRangePicker(ref),
               Spacer(),
-              SelectedUserPicker(workspace: workspace),
+              SelectedUserPicker(),
               Gap(10),
               _projectsSettingsButton(context),
             ],
@@ -115,7 +112,7 @@ class WorkspaceSummary extends ConsumerWidget {
         await Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) {
-              return ProjectsSettings(workspace: workspace);
+              return ProjectsSettings();
             },
           ),
         );

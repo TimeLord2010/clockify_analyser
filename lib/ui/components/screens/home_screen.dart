@@ -1,82 +1,69 @@
 import 'package:clockify/data/models/workspace.dart';
-import 'package:clockify/features/modules/localstorage_module.dart';
-import 'package:clockify/features/modules/workspace_module.dart';
 import 'package:clockify/ui/components/organisms/workspace_summary.dart';
+import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
+    final selectedWorkspaceNotifier = ref.read(
+      selectedWorkspaceProvider.notifier,
+    );
 
-class _HomeScreenState extends State<HomeScreen> {
-  List<Workspace>? workspaces;
-  Workspace? selectedWorkspace;
-
-  @override
-  void initState() {
-    WorkspaceModule.findWorkspaces().then((x) {
-      workspaces = x;
-      _loadLastSelectedWorkspace();
-      updateUi();
-    });
-    super.initState();
-  }
-
-  void _loadLastSelectedWorkspace() {
-    final lastWorkspaceId = LocalStorageModule.lastSelectedWorkspaceId;
-    if (lastWorkspaceId != null && workspaces != null) {
-      try {
-        selectedWorkspace = workspaces!.firstWhere(
-          (workspace) => workspace.id == lastWorkspaceId,
-        );
-      } catch (e) {
-        // Workspace not found, clear the saved preference
-        LocalStorageModule.lastSelectedWorkspaceId = null;
-      }
-    }
-  }
-
-  void _onWorkspaceChanged(Workspace? workspace) {
-    selectedWorkspace = workspace;
-    LocalStorageModule.lastSelectedWorkspaceId = workspace?.id;
-    updateUi();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Clockify'),
         actions: [
-          DropdownButton(
-            value: selectedWorkspace,
-            items: [
-              for (Workspace workspace in workspaces ?? [])
-                DropdownMenuItem(
-                  value: workspace,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(workspace.name),
-                  ),
-                ),
-            ],
-            onChanged: _onWorkspaceChanged,
+          selectedWorkspaceAsync.when(
+            data: (selectedWorkspace) {
+              final workspaces = selectedWorkspaceNotifier.workspaces;
+              return DropdownButton<Workspace>(
+                value: selectedWorkspace,
+                items: [
+                  for (Workspace workspace in workspaces ?? [])
+                    DropdownMenuItem(
+                      value: workspace,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(workspace.name),
+                      ),
+                    ),
+                ],
+                onChanged: (workspace) {
+                  selectedWorkspaceNotifier.selectWorkspace(workspace);
+                },
+              );
+            },
+            loading: () => CircularProgressIndicator(),
+            error: (error, stack) => Icon(Icons.error),
           ),
         ],
       ),
-      body: selectedWorkspace == null
-          ? null
-          : WorkspaceSummary(
-              key: ValueKey(selectedWorkspace!.id),
-              workspace: selectedWorkspace!,
-            ),
+      body: selectedWorkspaceAsync.when(
+        data: (selectedWorkspace) {
+          if (selectedWorkspace == null) {
+            return Center(child: Text('Please select a workspace'));
+          }
+          return WorkspaceSummary(key: ValueKey(selectedWorkspace.id));
+        },
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, color: Colors.red, size: 48),
+              SizedBox(height: 16),
+              Text('Error loading workspaces'),
+              SizedBox(height: 8),
+              Text(error.toString()),
+            ],
+          ),
+        ),
+      ),
     );
-  }
-
-  void updateUi() {
-    if (mounted) setState(() {});
   }
 }

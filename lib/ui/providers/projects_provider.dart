@@ -1,22 +1,52 @@
 import 'package:clockify/data/models/hourly_rate.dart';
 import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/features/modules/project_module.dart';
+import 'package:clockify/services/logger.dart';
+import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
+var _logger = createLogger('ProjectsProvider');
+
 class ProjectsNotifier extends StateNotifier<List<Project>> {
-  ProjectsNotifier(this.workspace) : super([]) {
-    load();
+  ProjectsNotifier(this.ref) : super([]) {
+    _initialize();
   }
 
-  final Workspace workspace;
+  final Ref ref;
 
-  Future<void> load() async {
-    final projects = await ProjectModule.findProjects(
-      workspaceId: workspace.id,
-    );
+  void _initialize() {
+    _logger.d('Initializing');
+
+    // Get the current workspace value immediately
+    final currentWorkspace = ref.read(selectedWorkspaceProvider);
+    currentWorkspace.whenData((workspace) {
+      if (workspace != null) {
+        _logger.d('Loading projects for current workspace: ${workspace.id}');
+        load(workspace.id);
+      } else {
+        state = [];
+      }
+    });
+
+    // Also listen for future changes
+    ref.listen(selectedWorkspaceProvider, (previous, next) {
+      next.whenData((workspace) {
+        if (workspace != null) {
+          _logger.d('Workspace changed, loading projects: ${workspace.id}');
+          load(workspace.id);
+        } else {
+          state = [];
+        }
+      });
+    });
+  }
+
+  Future<void> load(String workspaceId) async {
+    _logger.i('Loading for Workspace $workspaceId');
+    final projects = await ProjectModule.findProjects(workspaceId: workspaceId);
     state = projects;
+    _logger.i('Found: ${projects.map((x) => x.name).join(', ')}');
   }
 
   void updateHourly(Project project, String userId, double newValue) {
@@ -33,8 +63,7 @@ class ProjectsNotifier extends StateNotifier<List<Project>> {
   }
 }
 
-// Provider factory function that takes a workspace parameter
-final projectsProvider =
-    StateNotifierProvider.family<ProjectsNotifier, List<Project>, Workspace>(
-      (ref, workspace) => ProjectsNotifier(workspace),
-    );
+// Provider for projects based on selected workspace
+final projectsProvider = StateNotifierProvider<ProjectsNotifier, List<Project>>(
+  (ref) => ProjectsNotifier(ref),
+);
