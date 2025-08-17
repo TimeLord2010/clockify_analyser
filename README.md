@@ -4,6 +4,8 @@ A Flutter web application that provides comprehensive insights into your Clockif
 
 **Live Demo:** https://clockify-analyser.web.app
 
+<img width="891" height="813" alt="Screenshot 2025-08-17 at 11 33 44" src="https://github.com/user-attachments/assets/df43c446-9535-421d-84e1-26d7c55f3f03" />
+
 ## Overview
 
 Clockify Analyser transforms your time tracking data into meaningful visualizations and analytics, helping you understand your work patterns and earnings at a glance.
