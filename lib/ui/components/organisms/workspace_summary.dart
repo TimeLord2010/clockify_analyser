@@ -1,14 +1,13 @@
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
+import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
-import 'package:clockify/ui/components/molecules/date_range_picker.dart';
 import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/molecules/trending_times.dart';
-import 'package:clockify/ui/components/organisms/projects_settings.dart';
-import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
@@ -79,58 +78,22 @@ class WorkspaceSummary extends ConsumerWidget {
         builder: (context, constraints) {
           var width = constraints.maxWidth;
           if (width < 500) {
-            // Thin layout
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _dateRangePicker(ref),
-                Spacer(),
-                _projectsSettingsButton(context),
-              ],
-            );
+            return SizedBox.shrink();
           }
 
           // Wide layout
           return Row(
             children: [
               Gap(8),
-              _dateRangePicker(ref),
+              SelectedDateRangePicker(),
               Spacer(),
               SelectedUserPicker(),
               Gap(10),
-              _projectsSettingsButton(context),
+              ProjectsSettingsButton(),
             ],
           );
         },
       ),
-    );
-  }
-
-  IconButton _projectsSettingsButton(BuildContext context) {
-    return IconButton(
-      onPressed: () async {
-        await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) {
-              return ProjectsSettings();
-            },
-          ),
-        );
-      },
-      icon: Icon(Icons.settings),
-    );
-  }
-
-  Widget _dateRangePicker(WidgetRef ref) {
-    var dateRange = ref.watch(dateRangeProvider);
-    return DateRangePicker(
-      startDate: dateRange.startDate,
-      endDate: dateRange.endDate,
-      onDateRangeChanged: (newStartDate, newEndDate) {
-        ref
-            .read(dateRangeProvider.notifier)
-            .updateDateRange(newStartDate, newEndDate);
-      },
     );
   }
 }

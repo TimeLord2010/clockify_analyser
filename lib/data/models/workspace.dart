@@ -5,7 +5,13 @@ class Workspace {
   Workspace({required this.id, required this.name});
 
   factory Workspace.fromMap(Map<String, dynamic> map) {
-    return Workspace(id: map['id'], name: map['name']);
+    String name = map['name'];
+    var suffix = "'s workspace";
+    if (name.endsWith(suffix)) {
+      name = name.substring(0, name.length - suffix.length);
+    }
+
+    return Workspace(id: map['id'], name: name);
   }
 
   @override

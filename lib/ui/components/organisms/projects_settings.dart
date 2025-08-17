@@ -1,7 +1,9 @@
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/data/models/user.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
+import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
+import 'package:clockify/ui/components/atoms/selected_workspace_picker.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:flutter/material.dart';
@@ -33,20 +35,47 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
   Widget build(BuildContext context) {
     var selectedUser = ref.watch(selectedUserProvider);
     return Scaffold(
-      appBar: AppBar(title: Text('Projects')),
+      appBar: AppBar(
+        title: Text('Projects'),
+        centerTitle: false,
+        actions: [SelectedWorkspacePicker()],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: SelectedUserPicker(),
-            ),
+            _filters(),
             Gap(10),
             Expanded(child: _projectsHourly(selectedUser)),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _filters() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var width = constraints.maxWidth;
+        if (width > 500) {
+          return Row(
+            children: [
+              SelectedDateRangePicker(),
+              Spacer(),
+              SelectedUserPicker(),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            SelectedDateRangePicker(),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SelectedUserPicker(),
+            ),
+          ],
+        );
+      },
     );
   }
 
