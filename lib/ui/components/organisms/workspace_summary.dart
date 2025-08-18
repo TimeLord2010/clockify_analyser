@@ -1,7 +1,6 @@
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
-import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
@@ -88,8 +87,6 @@ class WorkspaceSummary extends ConsumerWidget {
               SelectedDateRangePicker(),
               Spacer(),
               SelectedUserPicker(),
-              Gap(10),
-              ProjectsSettingsButton(),
             ],
           );
         },

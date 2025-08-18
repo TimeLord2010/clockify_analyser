@@ -4,8 +4,12 @@ import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_workspace_picker.dart';
+import 'package:clockify/ui/components/screens/main_screen.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
+import 'package:clockify/ui/providers/selected_workspace_provider.dart';
+import 'package:clockify/ui/providers/time_entries_provider.dart';
+import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -38,7 +42,14 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
       appBar: AppBar(
         title: Text('Projects'),
         centerTitle: false,
-        actions: [SelectedWorkspacePicker()],
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            tooltip: 'Remover chave de API',
+            onPressed: () => _showRemoveApiKeyDialog(),
+          ),
+          SelectedWorkspacePicker(),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -166,5 +177,58 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
         focusedBorder: OutlineInputBorder(),
       ),
     );
+  }
+
+  void _showRemoveApiKeyDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Remover Chave de API'),
+          content: Text(
+            'Tem certeza que deseja remover a chave de API? Você precisará configurar uma nova chave para continuar usando a aplicação.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _removeApiKey();
+              },
+              child: Text('Remover'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _removeApiKey() {
+    // Use the API key provider to remove the key
+    ref.read(apiKeyProvider.notifier).removeApiKey();
+
+    // Clear workspace and user selections
+    ref.read(selectedWorkspaceProvider.notifier).clearSelection();
+    ref.read(selectedUserProvider.notifier).clearSelection();
+
+    // Invalidate all providers to reset their state
+    ref.invalidate(selectedWorkspaceProvider);
+    ref.invalidate(usersProvider);
+    ref.invalidate(projectsProvider);
+    ref.invalidate(timeEntriesForWorkspaceProvider);
+
+    // Navigate back or show a message
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Chave de API removida com sucesso!'),
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
   }
 }

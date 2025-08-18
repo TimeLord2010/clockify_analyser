@@ -12,41 +12,33 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        var width = constraints.maxWidth;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text('Clockify'),
-            centerTitle: false,
-            actions: [
-              SelectedWorkspacePicker(),
-              if (width < 500) ProjectsSettingsButton(),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Clockify'),
+        centerTitle: false,
+        actions: [SelectedWorkspacePicker(), ProjectsSettingsButton()],
+      ),
+      body: selectedWorkspaceAsync.when(
+        data: (selectedWorkspace) {
+          if (selectedWorkspace == null) {
+            return Center(child: Text('Please select a workspace'));
+          }
+          return WorkspaceSummary(key: ValueKey(selectedWorkspace.id));
+        },
+        loading: () => Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error, color: Colors.red, size: 48),
+              SizedBox(height: 16),
+              Text('Error loading workspaces'),
+              SizedBox(height: 8),
+              Text(error.toString()),
             ],
           ),
-          body: selectedWorkspaceAsync.when(
-            data: (selectedWorkspace) {
-              if (selectedWorkspace == null) {
-                return Center(child: Text('Please select a workspace'));
-              }
-              return WorkspaceSummary(key: ValueKey(selectedWorkspace.id));
-            },
-            loading: () => Center(child: CircularProgressIndicator()),
-            error: (error, stack) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error, color: Colors.red, size: 48),
-                  SizedBox(height: 16),
-                  Text('Error loading workspaces'),
-                  SizedBox(height: 8),
-                  Text(error.toString()),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
