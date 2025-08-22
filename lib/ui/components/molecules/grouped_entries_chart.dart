@@ -141,15 +141,9 @@ class GroupedEntriesChart extends ConsumerWidget {
 
                     // Get all entries that match this description
                     if (sectionName == 'Others') {
-                      // Handle "Others" category - get entries that are < 3% of total
-                      final totalDuration = groupedData.values.fold<Duration>(
-                        Duration.zero,
-                        (sum, duration) => sum + duration,
-                      );
-
-                      sectionEntries = entries.where((entry) {
-                        return _isOthersEntry(entry, totalDuration);
-                      }).toList();
+                      // Handle "Others" category - get entries whose descriptions
+                      // were filtered out during grouping (< 3% of total when grouped)
+                      sectionEntries = _getOthersEntries(entries);
                     } else {
                       // Regular section - get entries with matching description
                       sectionEntries = entries.where((entry) {
@@ -406,17 +400,47 @@ class GroupedEntriesChart extends ConsumerWidget {
     return description.isEmpty ? '(No description)' : description;
   }
 
-  /// Determines if an entry should be included in the "Others" category
-  /// based on the percentage threshold
-  bool _isOthersEntry(
-    TimeEntry entry,
-    Duration totalDuration, {
-    double threshold = 3.0,
-  }) {
-    final entryDuration = entry.timeInterval.duration;
-    final percentage =
-        (entryDuration.inMinutes / totalDuration.inMinutes) * 100;
-    return percentage < threshold;
+  /// Gets all entries that belong to the "Others" category
+  /// Uses the same logic as _groupEntriesByDescription to ensure consistency
+  List<TimeEntry> _getOthersEntries(List<TimeEntry> entries) {
+    final Map<String, List<TimeEntry>> groupedByDescription = {};
+
+    // Group entries by description
+    for (final entry in entries) {
+      final description = _normalizeDescription(entry.description);
+
+      if (groupedByDescription.containsKey(description)) {
+        groupedByDescription[description]!.add(entry);
+      } else {
+        groupedByDescription[description] = [entry];
+      }
+    }
+
+    // Calculate total duration for percentage calculations
+    final totalDuration = entries.fold<Duration>(
+      Duration.zero,
+      (sum, entry) => sum + entry.timeInterval.duration,
+    );
+
+    // Find entries whose descriptions represent < 3% of total time
+    final List<TimeEntry> othersEntries = [];
+    const double percentageToIgnore = 3.0;
+
+    for (final entry in groupedByDescription.entries) {
+      final groupDuration = entry.value.fold<Duration>(
+        Duration.zero,
+        (sum, timeEntry) => sum + timeEntry.timeInterval.duration,
+      );
+
+      final percentage =
+          (groupDuration.inMinutes / totalDuration.inMinutes) * 100;
+
+      if (percentage < percentageToIgnore) {
+        othersEntries.addAll(entry.value);
+      }
+    }
+
+    return othersEntries;
   }
 
   Map<String, Duration> _groupEntriesByDescription(List<TimeEntry> entries) {
