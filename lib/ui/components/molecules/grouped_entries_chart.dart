@@ -1,12 +1,18 @@
 import 'dart:math';
 
+import 'package:clockify/data/models/project.dart';
 import 'package:clockify/data/models/time_entry.dart';
+import 'package:clockify/data/models/user.dart';
 import 'package:clockify/features/usecases/duration/format_duration.dart';
+import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
+import 'package:clockify/ui/providers/projects_provider.dart';
+import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class GroupedEntriesChart extends ConsumerWidget {
   const GroupedEntriesChart({super.key});
@@ -16,7 +22,7 @@ class GroupedEntriesChart extends ConsumerWidget {
     final entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
 
     return entriesAsync.when(
-      data: (entries) => _buildChart(context, entries),
+      data: (entries) => _buildChart(context, ref, entries),
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
         child: Column(
@@ -40,7 +46,11 @@ class GroupedEntriesChart extends ConsumerWidget {
     );
   }
 
-  Widget _buildChart(BuildContext context, List<TimeEntry> entries) {
+  Widget _buildChart(
+    BuildContext context,
+    WidgetRef ref,
+    List<TimeEntry> entries,
+  ) {
     if (entries.isEmpty) {
       return Center(
         child: Column(
@@ -71,7 +81,14 @@ class GroupedEntriesChart extends ConsumerWidget {
         var chartSpace = width - (legendSpace + spacing);
         return Row(
           children: [
-            SizedBox(width: chartSpace, child: _chart(pieChartSections)),
+            SizedBox(
+              width: chartSpace,
+              child: _chart(
+                pieChartSections: pieChartSections,
+                ref: ref,
+                entries: entries,
+              ),
+            ),
             const Gap(20),
             SizedBox(width: legendSpace, child: _legends(context, groupedData)),
           ],
@@ -80,7 +97,13 @@ class GroupedEntriesChart extends ConsumerWidget {
     );
   }
 
-  LayoutBuilder _chart(List<PieChartSectionData> pieChartSections) {
+  LayoutBuilder _chart({
+    required List<PieChartSectionData> pieChartSections,
+    required WidgetRef ref,
+    required List<TimeEntry> entries,
+  }) {
+    var projects = ref.watch(projectsProvider);
+    var selectedUser = ref.watch(selectedUserProvider);
     return LayoutBuilder(
       builder: (context, constraints) {
         final chartSize = min(constraints.maxHeight, constraints.maxWidth);
@@ -100,11 +123,146 @@ class GroupedEntriesChart extends ConsumerWidget {
             centerSpaceRadius: centerSpaceRadius,
             sectionsSpace: 2,
             pieTouchData: PieTouchData(
-              touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                // Handle touch events if needed
+              touchCallback: (FlTouchEvent event, pieTouchResponse) async {
+                var touchedSection = pieTouchResponse?.touchedSection;
+                var index = touchedSection?.touchedSectionIndex;
+                debugPrint('Clicked on a section with index $index');
+
+                String sectionName = '';
+                List<TimeEntry> sectionEntries = [];
+
+                if (index != null && index >= 0) {
+                  final groupedData = _groupEntriesByDescription(entries);
+                  if (index < groupedData.length) {
+                    final groupedEntry = groupedData.entries.elementAt(index);
+                    sectionName = groupedEntry.key;
+
+                    // Get all entries that match this description
+                    if (sectionName == 'Others') {
+                      // Handle "Others" category - get entries that are < 3% of total
+                      final totalDuration = groupedData.values.fold<Duration>(
+                        Duration.zero,
+                        (sum, duration) => sum + duration,
+                      );
+
+                      sectionEntries = entries.where((entry) {
+                        return _isOthersEntry(entry, totalDuration);
+                      }).toList();
+                    } else {
+                      // Regular section - get entries with matching description
+                      sectionEntries = entries.where((entry) {
+                        final description = _normalizeDescription(
+                          entry.description,
+                        );
+                        return description == sectionName;
+                      }).toList();
+                    }
+                  }
+                }
+
+                if (event is FlTapDownEvent) {
+                  await showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        contentPadding: EdgeInsets.all(1),
+                        titlePadding: EdgeInsets.fromLTRB(15, 10, 0, 0),
+                        constraints: BoxConstraints(minWidth: 400),
+                        title: Text(sectionName),
+                        content: ClipRRect(
+                          borderRadius: BorderRadiusGeometry.only(
+                            bottomLeft: Radius.circular(28),
+                            bottomRight: Radius.circular(28),
+                          ),
+                          child: SizedBox(
+                            height: 500,
+                            width: 300,
+                            child: _pieSectionDialogContent(
+                              sectionEntries,
+                              projects,
+                              selectedUser,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
               },
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _pieSectionDialogContent(
+    List<TimeEntry> sectionEntries,
+    List<Project> projects,
+    User? selectedUser,
+  ) {
+    int sortSelection = 0;
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 15),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SegmentedButton(
+                  segments: [
+                    ButtonSegment(
+                      value: 0,
+                      icon: Icon(Icons.calendar_today_rounded),
+                    ),
+                    ButtonSegment(value: 1, icon: Icon(Icons.timer_rounded)),
+                  ],
+                  selected: {sortSelection},
+                  onSelectionChanged: (newSort) {
+                    sortSelection = newSort.firstOrNull ?? 0;
+
+                    if (sortSelection == 0) {
+                      // Sort by created time
+                      sectionEntries.sortByDate(
+                        (x) => x.timeInterval.start,
+                        false,
+                      );
+                    } else {
+                      // Sort by duration
+                      sectionEntries.sortByNum((x) {
+                        var duration = x.timeInterval.duration;
+                        return duration.inSeconds;
+                      }, false);
+                    }
+
+                    setState(() {});
+                  },
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemBuilder: (context, index) {
+                  var entry = sectionEntries.elementAt(index);
+                  var projectId = entry.projectId;
+                  var project = projects.firstWhereOrNull(
+                    (x) => x.id == projectId,
+                  );
+                  var membership = project?.memberships.firstWhereOrNull(
+                    (x) => x.userId == selectedUser?.id,
+                  );
+                  return TimeEntryViewer(
+                    entry: entry,
+                    membership: membership,
+                    project: project,
+                    customHourlyRate: null,
+                  );
+                },
+                itemCount: sectionEntries.length,
+              ),
+            ),
+          ],
         );
       },
     );
@@ -229,13 +387,29 @@ class GroupedEntriesChart extends ConsumerWidget {
     );
   }
 
+  /// Normalizes a time entry description, handling empty descriptions
+  String _normalizeDescription(String description) {
+    return description.isEmpty ? '(No description)' : description;
+  }
+
+  /// Determines if an entry should be included in the "Others" category
+  /// based on the percentage threshold
+  bool _isOthersEntry(
+    TimeEntry entry,
+    Duration totalDuration, {
+    double threshold = 3.0,
+  }) {
+    final entryDuration = entry.timeInterval.duration;
+    final percentage =
+        (entryDuration.inMinutes / totalDuration.inMinutes) * 100;
+    return percentage < threshold;
+  }
+
   Map<String, Duration> _groupEntriesByDescription(List<TimeEntry> entries) {
     final Map<String, Duration> grouped = {};
 
     for (final entry in entries) {
-      final description = entry.description.isEmpty
-          ? '(No description)'
-          : entry.description;
+      final description = _normalizeDescription(entry.description);
 
       if (grouped.containsKey(description)) {
         grouped[description] =
@@ -308,9 +482,7 @@ class GroupedEntriesChart extends ConsumerWidget {
       return PieChartSectionData(
         color: section.color,
         value: section.value,
-        title: showTitles
-            ? section.title
-            : '', // Hide title if radius is too small
+        title: section.title,
         radius: radius,
         titleStyle: section.titleStyle,
         badgeWidget: section.badgeWidget,
