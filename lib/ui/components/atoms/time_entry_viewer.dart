@@ -9,7 +9,6 @@ class TimeEntryViewer extends StatelessWidget {
   const TimeEntryViewer({
     super.key,
     required this.entry,
-    required this.customHourlyRate,
     required this.membership,
     required this.project,
   });
@@ -18,7 +17,6 @@ class TimeEntryViewer extends StatelessWidget {
 
   /// An object to get project based on a given project id.
   final Membership? membership;
-  final double? customHourlyRate;
   final Project? project;
 
   @override
@@ -30,7 +28,7 @@ class TimeEntryViewer extends StatelessWidget {
     var gainManager = TimeEntryGainManager(
       entry: entry,
       membership: membership,
-      customHourlyRate: customHourlyRate,
+      customHourlyRate: null,
     );
 
     return Card(

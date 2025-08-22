@@ -1,8 +1,10 @@
 import 'dart:math';
 
+import 'package:clockify/data/models/hourly_rate.dart';
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/data/models/time_entry.dart';
 import 'package:clockify/data/models/user.dart';
+import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/duration/format_duration.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
@@ -167,7 +169,6 @@ class GroupedEntriesChart extends ConsumerWidget {
                       return AlertDialog(
                         contentPadding: EdgeInsets.all(1),
                         titlePadding: EdgeInsets.fromLTRB(15, 10, 0, 0),
-                        constraints: BoxConstraints(minWidth: 400),
                         title: Text(sectionName),
                         content: ClipRRect(
                           borderRadius: BorderRadiusGeometry.only(
@@ -176,7 +177,7 @@ class GroupedEntriesChart extends ConsumerWidget {
                           ),
                           child: SizedBox(
                             height: 500,
-                            width: 300,
+                            width: 400,
                             child: _pieSectionDialogContent(
                               sectionEntries,
                               projects,
@@ -202,6 +203,7 @@ class GroupedEntriesChart extends ConsumerWidget {
     User? selectedUser,
   ) {
     int sortSelection = 0;
+
     return StatefulBuilder(
       builder: (context, setState) {
         return Column(
@@ -249,14 +251,26 @@ class GroupedEntriesChart extends ConsumerWidget {
                   var project = projects.firstWhereOrNull(
                     (x) => x.id == projectId,
                   );
-                  var membership = project?.memberships.firstWhereOrNull(
-                    (x) => x.userId == selectedUser?.id,
-                  );
+                  Membership? getMembership() {
+                    var savedHourly = LocalStorageModule.getHourlyRate(
+                      projectId,
+                    );
+                    if (savedHourly != null) {
+                      return Membership(
+                        userId: selectedUser?.id ?? '',
+                        hourlyRate: HourlyRate(amount: savedHourly),
+                      );
+                    }
+                    return project?.memberships.firstWhereOrNull(
+                      (x) => x.userId == selectedUser?.id,
+                    );
+                  }
+
+                  var membership = getMembership();
                   return TimeEntryViewer(
                     entry: entry,
                     membership: membership,
                     project: project,
-                    customHourlyRate: null,
                   );
                 },
                 itemCount: sectionEntries.length,
