@@ -70,6 +70,47 @@ class TimeEntriesGainManager {
   /// Quick access to total gain
   double get totalGain => _getTotalGain();
 
+  /// Calculate the mean worked time for all the entries.  But only taking into
+  /// account the business days.
+  Duration get meanByDay {
+    // Group entries by date (ignoring time)
+    Map<DateTime, List<TimeEntry>> entriesByDate = {};
+
+    for (var entry in timeEntries) {
+      // Get the date part only (year, month, day)
+      final date = DateTime(
+        entry.timeInterval.start.year,
+        entry.timeInterval.start.month,
+        entry.timeInterval.start.day,
+      );
+
+      entriesByDate.putIfAbsent(date, () => []).add(entry);
+    }
+
+    // Filter to business days only (Monday-Friday)
+    Map<DateTime, List<TimeEntry>> businessDayEntries = {};
+    for (var date in entriesByDate.keys) {
+      if (![DateTime.saturday, DateTime.sunday].contains(date.weekday)) {
+        businessDayEntries[date] = entriesByDate[date]!;
+      }
+    }
+
+    // If no business days with entries, return 0
+    if (businessDayEntries.isEmpty) return Duration.zero;
+
+    // Calculate total hours worked on business days
+    double totalMin = 0.0;
+    for (var entries in businessDayEntries.values) {
+      for (var entry in entries) {
+        final durationInMin = entry.timeInterval.duration.inMinutes;
+        totalMin += durationInMin;
+      }
+    }
+
+    // Calculate mean: total hours / number of business days
+    return Duration(minutes: totalMin ~/ businessDayEntries.length);
+  }
+
   /// Map of project to its calculated gain
   Map<Project, double> get gainsByProject {
     if (_gainsByProject != null) return _gainsByProject!;

@@ -2,6 +2,8 @@ import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TotalGainByProject extends StatefulWidget {
   const TotalGainByProject({super.key, required this.gainManager});
@@ -37,25 +39,45 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
 
     final totalGain = widget.gainManager.totalGain;
 
-    return Tooltip(
-      message: 'Total: \$${totalGain.toStringAsFixed(2)}',
-      child: Column(
-        children: [
-          Expanded(child: _barGraph()),
-          // Scrollable project labels
-          LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: _labels(constraints),
+    return Row(
+      children: [
+        Expanded(
+          child: Tooltip(
+            message: 'Total: \$${totalGain.toStringAsFixed(2)}',
+            child: Column(
+              children: [
+                Expanded(child: _barGraph()),
+                // Scrollable project labels
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: _labels(constraints),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+        Gap(15),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              'Média diária',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            Text(
+              widget.gainManager.meanByDay.toReadable(),
+              style: TextStyle(fontSize: 13),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

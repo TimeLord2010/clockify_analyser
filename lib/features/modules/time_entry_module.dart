@@ -14,11 +14,9 @@ class TimeEntryModule {
     DateTime lastDay;
 
     if (startDate != null && endDate != null) {
-      // Use provided date range
       firstDay = startDate;
-      lastDay = endDate;
+      lastDay = endDate.add(Duration(days: 1));
     } else if (month != null && year != null) {
-      // Calculate the first and last day of the specified month (backward compatibility)
       firstDay = DateTime(year, month, 1);
       lastDay = DateTime(year, month + 1, 0);
     } else {
