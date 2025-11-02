@@ -18,7 +18,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
   Duration get totalDuration => widget.gainManager.totalDuration;
   bool showGain = false;
 
-  double gainByDayWidth = 90;
+  double gainByDayWidth = 80;
 
   @override
   void initState() {
