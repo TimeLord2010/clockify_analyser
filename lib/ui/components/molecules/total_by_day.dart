@@ -72,6 +72,7 @@ class TotalByDay extends StatelessWidget {
 
     return ListView.builder(
       scrollDirection: Axis.horizontal,
+      cacheExtent: 2000,
       padding: EdgeInsets.only(bottom: 5),
       itemBuilder: (context, index) {
         var dt = allDates.elementAt(index);
