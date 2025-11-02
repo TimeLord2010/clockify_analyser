@@ -32,9 +32,48 @@ class DateRangeNotifier extends StateNotifier<DateRange> {
 
   static DateRange _getInitialDateRange() {
     final now = DateTime.now();
-    return DateRange(
+    final currentMonthRange = DateRange(
       startDate: DateTime(now.year, now.month, 1),
       endDate: DateTime(now.year, now.month + 1, 0),
+    );
+
+    // Check if there are any business days in the current month up to today
+    if (_hasBusinessDaysInCurrentMonth(currentMonthRange, now)) {
+      return currentMonthRange;
+    } else {
+      // Use last month if no business days in current month yet
+      return _getLastMonthRange(now);
+    }
+  }
+
+  /// Checks if there are any business days (Monday-Friday) in the current month
+  /// from the 1st up to (and including) the current date
+  static bool _hasBusinessDaysInCurrentMonth(
+    DateRange currentMonthRange,
+    DateTime now,
+  ) {
+    DateTime currentDate = currentMonthRange.startDate;
+
+    // Only check days up to and including today
+    DateTime checkUntil = DateTime(now.year, now.month, now.day);
+
+    while (!currentDate.isAfter(checkUntil)) {
+      // Check if the current day is a business day (Monday-Friday)
+      if (![DateTime.saturday, DateTime.sunday].contains(currentDate.weekday)) {
+        return true;
+      }
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+
+    return false;
+  }
+
+  /// Returns the date range for the previous month
+  static DateRange _getLastMonthRange(DateTime now) {
+    final lastMonth = DateTime(now.year, now.month - 1, 1);
+    return DateRange(
+      startDate: DateTime(lastMonth.year, lastMonth.month, 1),
+      endDate: DateTime(lastMonth.year, lastMonth.month + 1, 0),
     );
   }
 
