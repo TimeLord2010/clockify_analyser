@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clockify/data/models/time_entry.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,5 +61,36 @@ class LocalStorageModule {
     } else {
       _sp.remove('last_selected_user_id');
     }
+  }
+
+  static List<TimeEntry>? getTimeEntriesFromUser({
+    required String workspaceId,
+    required String userId,
+    required int year,
+    required int month,
+  }) {
+    var time = '$year-${month.toString().padLeft(2, '0')}';
+    var key = 'wks_$workspaceId:usr_$userId:$time';
+    List<String>? list = _sp.getStringList(key);
+    if (list == null) return null;
+    return [for (var item in list) TimeEntry.fromMap(jsonDecode(item))];
+  }
+
+  static Future<void> setTimeEntriesForUser({
+    required String workspaceId,
+    required String userId,
+    required int year,
+    required int month,
+    required List<TimeEntry>? entries,
+  }) async {
+    var time = '$year-${month.toString().padLeft(2, '0')}';
+    var key = 'wks_$workspaceId:usr_$userId:$time';
+    if (entries == null) {
+      await _sp.remove(key);
+      return;
+    }
+    await _sp.setStringList(key, [
+      for (var entry in entries) jsonEncode(entry.toMap),
+    ]);
   }
 }

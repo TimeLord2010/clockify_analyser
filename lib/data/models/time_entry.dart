@@ -25,6 +25,16 @@ class TimeEntry {
       timeInterval: TimeInterval.fromMap(map['timeInterval'] ?? {}),
     );
   }
+
+  Map<String, dynamic> get toMap {
+    return {
+      'description': description,
+      'hourlyRate': hourlyRate.toMap,
+      'projectId': projectId,
+      'userId': userId,
+      'timeInterval': timeInterval.toMap,
+    };
+  }
 }
 
 class TimeInterval {
@@ -40,5 +50,9 @@ class TimeInterval {
       start: DateTime.parse(map['start']).toLocal(),
       end: map.tryGetDateTime('end')?.toLocal() ?? DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> get toMap {
+    return {'start': start.toIso8601String(), 'end': end.toIso8601String()};
   }
 }
