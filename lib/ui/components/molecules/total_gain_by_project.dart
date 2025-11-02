@@ -2,7 +2,6 @@ import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TotalGainByProject extends StatefulWidget {
@@ -18,6 +17,8 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
 
   Duration get totalDuration => widget.gainManager.totalDuration;
   bool showGain = false;
+
+  double gainByDayWidth = 90;
 
   @override
   void initState() {
@@ -39,49 +40,65 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
 
     final totalGain = widget.gainManager.totalGain;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Tooltip(
-            message: 'Total: \$${totalGain.toStringAsFixed(2)}',
-            child: Column(
+    return Tooltip(
+      message: 'Total: \$${totalGain.toStringAsFixed(2)}',
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(
+              spacing: 15,
               children: [
                 Expanded(child: _barGraph()),
-                // Scrollable project labels
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: _labels(constraints),
-                      ),
-                    );
-                  },
-                ),
+                _meanByDay(),
               ],
             ),
           ),
-        ),
-        Gap(15),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
+          // Scrollable project labels
+          LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: _labels(constraints),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _meanByDay() {
+    return SizedBox(
+      width: gainByDayWidth,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Text(
               'Média diária',
               style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
-            Text(
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Text(
               widget.gainManager.meanByDay.toReadable(),
               style: TextStyle(fontSize: 13),
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _labels(BoxConstraints constraints) {
+    var maxWidth = constraints.maxWidth;
+    var actualWidth = maxWidth - gainByDayWidth;
     return Row(
       children: projectTotals.entries.map((entry) {
         Project project = entry.key;
@@ -89,7 +106,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
 
         double gain = widget.gainManager.getProjectGain(project);
         double percentage = duration.inSeconds / totalDuration.inSeconds;
-        double barWidth = constraints.maxWidth * percentage;
+        double barWidth = actualWidth * percentage;
 
         // Only show gain in label if it's not shown in the bar
         bool showGainInLabel = barWidth < 100;
@@ -123,7 +140,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
     );
   }
 
-  LayoutBuilder _barGraph() {
+  Widget _barGraph() {
     return LayoutBuilder(
       builder: (context, constraints) {
         return ClipRRect(

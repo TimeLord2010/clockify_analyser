@@ -57,7 +57,7 @@ class WorkspaceSummary extends ConsumerWidget {
         Gap(5),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 5),
-          height: 60,
+          height: 68,
           child: TotalGainByProject(gainManager: gainManager),
         ),
         Gap(5),
