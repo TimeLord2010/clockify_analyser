@@ -1,9 +1,5 @@
 import 'dart:math';
 
-import 'package:clockify/data/models/hourly_rate.dart';
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/time_entry.dart';
-import 'package:clockify/data/models/user.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/duration/format_duration.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
@@ -14,6 +10,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class GroupedEntriesChart extends ConsumerWidget {
@@ -241,7 +238,7 @@ class GroupedEntriesChart extends ConsumerWidget {
               child: ListView.builder(
                 itemBuilder: (context, index) {
                   var entry = sectionEntries.elementAt(index);
-                  var projectId = entry.projectId;
+                  String projectId = entry.projectId;
                   var project = projects.firstWhereOrNull(
                     (x) => x.id == projectId,
                   );

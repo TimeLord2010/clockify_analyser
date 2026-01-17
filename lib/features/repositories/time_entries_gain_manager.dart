@@ -1,7 +1,6 @@
-import 'package:clockify/data/models/hourly_rate.dart';
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/time_entry.dart';
+import 'package:clockify/features/usecases/color/color_to_hex.dart';
 import 'package:flutter/material.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 class TimeEntriesGainManager {
   final List<TimeEntry> timeEntries;
@@ -168,7 +167,7 @@ class TimeEntriesGainManager {
         orElse: () => Project(
           id: projectId,
           name: 'Unknown',
-          color: Colors.grey,
+          color: colorToHex(Colors.grey),
           memberships: [],
           archived: false,
         ),
@@ -213,7 +212,7 @@ class TimeEntriesGainManager {
         orElse: () => Project(
           id: entry.projectId,
           name: 'Unknown',
-          color: Colors.grey,
+          color: colorToHex(Colors.grey),
           memberships: [],
           archived: false,
         ),

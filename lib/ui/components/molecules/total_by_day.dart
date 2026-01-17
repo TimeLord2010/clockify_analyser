@@ -1,11 +1,11 @@
 import 'dart:math';
 
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/time_entry.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TotalByDay extends StatelessWidget {
@@ -175,9 +175,17 @@ class TotalByDay extends StatelessWidget {
         // Calculate percentage of total gain
         double percentage = totalDayGain > 0 ? gain / totalDayGain : 0.0;
 
+        Color getColor() {
+          var colorhex = project?.color;
+          if (colorhex != null) {
+            return hexToColor(colorhex);
+          }
+          return Colors.grey;
+        }
+
         return Expanded(
           flex: (percentage * 1000).round(),
-          child: Container(color: project?.color ?? Colors.grey),
+          child: Container(color: getColor()),
         );
       }).toList(),
     );

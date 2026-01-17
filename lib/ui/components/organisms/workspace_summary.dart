@@ -1,4 +1,3 @@
-import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
@@ -13,6 +12,7 @@ import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 class WorkspaceSummary extends ConsumerWidget {
   const WorkspaceSummary({super.key});

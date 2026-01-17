@@ -1,9 +1,7 @@
-import 'package:clockify/data/models/hourly_rate.dart';
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/features/modules/project_module.dart';
 import 'package:clockify/services/logger.dart';
 import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 var _logger = createLogger('ProjectsProvider');
@@ -44,7 +42,9 @@ class ProjectsNotifier extends StateNotifier<List<Project>> {
 
   Future<void> load(String workspaceId) async {
     _logger.i('Loading for Workspace $workspaceId');
-    final projects = await ProjectModule.findProjects(workspaceId: workspaceId);
+    final projects = await VitClockify.projects.getAll(
+      workspaceId: workspaceId,
+    );
     state = projects;
     _logger.i('Found: ${projects.map((x) => x.name).join(', ')}');
   }

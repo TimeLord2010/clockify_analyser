@@ -1,7 +1,7 @@
-import 'package:clockify/data/models/user.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 final selectedUserProvider = StateNotifierProvider<SelectedUserNotifier, User?>(
   (ref) {

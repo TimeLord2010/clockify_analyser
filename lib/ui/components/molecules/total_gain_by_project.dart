@@ -1,7 +1,8 @@
 import 'package:animated_flip_counter/animated_flip_counter.dart';
-import 'package:clockify/data/models/project.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:flutter/material.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TotalGainByProject extends StatefulWidget {
@@ -119,7 +120,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: project.color,
+                  color: hexToColor(project.color),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -161,7 +162,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
               return Expanded(
                 flex: (percentage * 1000).round(),
                 child: Container(
-                  decoration: BoxDecoration(color: project.color),
+                  decoration: BoxDecoration(color: hexToColor(project.color)),
                   child: showTextInBar
                       ? Center(child: _valueInBar(gain, project))
                       : null,
@@ -182,7 +183,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
       textStyle: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: _getContrastColor(project.color),
+        color: _getContrastColor(hexToColor(project.color)),
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
-import 'package:clockify/services/http_client.dart';
 import 'package:clockify/ui/components/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 // Provider para monitorar o estado da chave de API
 final apiKeyProvider = StateNotifierProvider<ApiKeyNotifier, String>((ref) {
@@ -17,20 +17,20 @@ class ApiKeyNotifier extends StateNotifier<String> {
   void _initialize() {
     final key = LocalStorageModule.clockifyKey;
     if (key.isNotEmpty) {
-      ClockifyHttpClient.apiKey = key;
+      VitClockify.apiKey = key;
       state = key;
     }
   }
 
   void setApiKey(String key) {
     LocalStorageModule.clockifyKey = key;
-    ClockifyHttpClient.apiKey = key;
+    VitClockify.apiKey = key;
     state = key;
   }
 
   void removeApiKey() {
     LocalStorageModule.clockifyKey = '';
-    ClockifyHttpClient.apiKey = null;
+    VitClockify.apiKey = null;
     state = '';
   }
 }

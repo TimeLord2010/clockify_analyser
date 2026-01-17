@@ -1,8 +1,8 @@
-import 'package:clockify/data/models/user.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 class SelectedUserPicker extends ConsumerWidget {
   const SelectedUserPicker({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
-import '../../../data/models/workspace.dart';
 import '../../providers/selected_workspace_provider.dart';
 
 class SelectedWorkspacePicker extends ConsumerWidget {

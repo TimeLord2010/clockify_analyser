@@ -1,7 +1,6 @@
-import 'package:clockify/data/models/workspace.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
-import 'package:clockify/features/modules/workspace_module.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 final selectedWorkspaceProvider =
     StateNotifierProvider<SelectedWorkspaceNotifier, AsyncValue<Workspace?>>((
@@ -19,7 +18,7 @@ class SelectedWorkspaceNotifier extends StateNotifier<AsyncValue<Workspace?>> {
 
   Future<void> _initialize() async {
     try {
-      _workspaces = await WorkspaceModule.findWorkspaces();
+      _workspaces = await VitClockify.workspaces.getAll();
       _loadLastSelectedWorkspace();
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);

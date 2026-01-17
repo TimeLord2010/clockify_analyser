@@ -1,6 +1,4 @@
-import 'package:clockify/data/models/hourly_rate.dart';
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/time_entry.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 class TimeEntryGainManager {
   final TimeEntry entry;

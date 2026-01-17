@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:clockify/data/models/time_entry.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 class LocalStorageModule {
   static SharedPreferences get _sp => GetIt.I.get<SharedPreferences>();
@@ -73,7 +73,7 @@ class LocalStorageModule {
     var key = 'wks_$workspaceId:usr_$userId:$time';
     List<String>? list = _sp.getStringList(key);
     if (list == null) return null;
-    return [for (var item in list) TimeEntry.fromMap(jsonDecode(item))];
+    return [for (var item in list) TimeEntry.fromJson(jsonDecode(item))];
   }
 
   static Future<void> setTimeEntriesForUser({
@@ -90,7 +90,7 @@ class LocalStorageModule {
       return;
     }
     await _sp.setStringList(key, [
-      for (var entry in entries) jsonEncode(entry.toMap),
+      for (var entry in entries) jsonEncode(entry.toJson()),
     ]);
   }
 }

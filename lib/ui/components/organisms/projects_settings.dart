@@ -1,6 +1,5 @@
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/user.dart';
 import 'package:clockify/features/modules/localstorage_module.dart';
+import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_workspace_picker.dart';
@@ -13,6 +12,7 @@ import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class ProjectsSettings extends ConsumerStatefulWidget {
@@ -140,7 +140,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
-              color: project.color,
+              color: hexToColor(project.color),
             ),
           ),
           Gap(5),

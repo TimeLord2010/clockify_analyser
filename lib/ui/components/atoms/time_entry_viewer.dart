@@ -1,8 +1,8 @@
-import 'package:clockify/data/models/project.dart';
-import 'package:clockify/data/models/time_entry.dart';
 import 'package:clockify/features/repositories/time_entry_gain_manager.dart';
 import 'package:clockify/features/usecases/date/format_time.dart';
+import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:flutter/material.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TimeEntryViewer extends StatelessWidget {
@@ -31,6 +31,8 @@ class TimeEntryViewer extends StatelessWidget {
       customHourlyRate: null,
     );
 
+    String? projectColor = project?.color;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -48,7 +50,9 @@ class TimeEntryViewer extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
-                        color: project?.color,
+                        color: projectColor == null
+                            ? null
+                            : hexToColor(projectColor),
                       ),
                     ),
                   ),
