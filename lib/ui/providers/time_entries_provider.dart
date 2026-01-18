@@ -66,7 +66,9 @@ final timeEntriesProvider =
             continue;
           }
         }
+
         // fetch from API for this segment
+
         final fetched = await VitClockify.timeEntries.getForUser(
           workspaceId: workspaceId,
           userId: userId,
@@ -75,7 +77,8 @@ final timeEntriesProvider =
         );
         result.addAll(fetched);
         // cache if eligible and full month
-        if (seg.isFullMonth && _shouldCacheMonth(seg.year, seg.month)) {
+        var shouldCacheMonth = _shouldCacheMonth(seg.year, seg.month);
+        if (seg.isFullMonth && shouldCacheMonth) {
           await LocalStorageModule.setTimeEntriesForUser(
             workspaceId: workspaceId,
             userId: userId,

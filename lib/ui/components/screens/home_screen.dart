@@ -1,29 +1,35 @@
 import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
 import 'package:clockify/ui/components/atoms/selected_workspace_picker.dart';
 import 'package:clockify/ui/components/organisms/workspace_summary.dart';
+import 'package:clockify/ui/components/pages/timer_page.dart';
 import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return HomeScreenState();
+  }
+}
+
+class HomeScreenState extends ConsumerState<HomeScreen> {
+  int selectedPage = 1;
+
+  @override
+  Widget build(BuildContext context) {
     final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Clockify'),
-        centerTitle: false,
-        actions: [SelectedWorkspacePicker(), ProjectsSettingsButton()],
-      ),
       body: selectedWorkspaceAsync.when(
         data: (selectedWorkspace) {
           if (selectedWorkspace == null) {
             return Center(child: Text('Please select a workspace'));
           }
-          return WorkspaceSummary(key: ValueKey(selectedWorkspace.id));
+          return _activeContent(selectedWorkspace);
         },
         loading: () => Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(
@@ -39,6 +45,51 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _activeContent(Workspace selectedWorkspace) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Spacer(),
+            SelectedWorkspacePicker(),
+            ProjectsSettingsButton(),
+          ],
+        ),
+        Expanded(
+          child: Row(
+            children: [
+              NavigationRail(
+                selectedIndex: selectedPage,
+                labelType: .selected,
+                onDestinationSelected: (value) {
+                  selectedPage = value;
+                  setState(() {});
+                },
+                destinations: [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.timelapse_rounded),
+                    label: Text('Temporizador'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.bar_chart_rounded),
+                    label: Text('Relatório'),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: switch (selectedPage) {
+                  0 => TimerPage(),
+                  1 => WorkspaceSummary(key: ValueKey(selectedWorkspace.id)),
+                  _ => Placeholder(),
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
