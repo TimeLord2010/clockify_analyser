@@ -5,6 +5,22 @@ class TimerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Icon(Icons.timer));
+    return Center(
+      child: FractionallySizedBox(
+        widthFactor: .8,
+        child: Row(
+          spacing: 20,
+          children: [
+            Icon(Icons.timer, size: 40),
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(labelText: 'Descrição'),
+              ),
+            ),
+            TextButton(onPressed: () {}, child: Text('Começar')),
+          ],
+        ),
+      ),
+    );
   }
 }
