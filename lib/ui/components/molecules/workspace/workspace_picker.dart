@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
-import '../../providers/selected_workspace_provider.dart';
+import '../../../providers/selected_workspace_provider.dart';
 
-class SelectedWorkspacePicker extends ConsumerWidget {
-  const SelectedWorkspacePicker({super.key});
+class WorkspacePicker extends ConsumerWidget {
+  const WorkspacePicker({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

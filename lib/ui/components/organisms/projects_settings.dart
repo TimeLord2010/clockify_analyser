@@ -2,7 +2,7 @@ import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
-import 'package:clockify/ui/components/atoms/selected_workspace_picker.dart';
+import 'package:clockify/ui/components/molecules/workspace/workspace_picker.dart';
 import 'package:clockify/ui/components/screens/main_screen.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
@@ -48,7 +48,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
             tooltip: 'Remover chave de API',
             onPressed: () => _showRemoveApiKeyDialog(),
           ),
-          SelectedWorkspacePicker(),
+          WorkspacePicker(),
         ],
       ),
       body: Padding(
