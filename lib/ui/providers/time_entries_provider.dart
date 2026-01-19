@@ -125,12 +125,22 @@ final timeEntriesForWorkspaceProvider = FutureProvider<List<TimeEntry>>((
   );
 });
 
+// Provider for last 7 days date range (stable, only updates once per day)
+final last7DaysDateRangeProvider = Provider<({DateTime startDate, DateTime endDate})>((ref) {
+  final now = DateTime.now();
+  // Normalize to midnight to ensure stable values throughout the day
+  final endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+  final startDate = DateTime(now.year, now.month, now.day - 7, 0, 0, 0);
+  return (startDate: startDate, endDate: endDate);
+});
+
 // Provider for time entries from the last 7 days
 final timeEntriesLast7DaysProvider = FutureProvider<List<TimeEntry>>((
   ref,
 ) async {
   final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
   final selectedUser = ref.watch(selectedUserProvider);
+  final dateRange = ref.watch(last7DaysDateRangeProvider);
 
   return selectedWorkspaceAsync.when(
     data: (workspace) async {
@@ -138,14 +148,11 @@ final timeEntriesLast7DaysProvider = FutureProvider<List<TimeEntry>>((
         return <TimeEntry>[];
       }
 
-      final now = DateTime.now();
-      final sevenDaysAgo = now.subtract(const Duration(days: 7));
-
       final params = TimeEntriesParams(
         workspaceId: workspace.id,
         userId: selectedUser.id,
-        startDate: sevenDaysAgo,
-        endDate: now,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
       );
 
       final timeEntriesAsync = ref.watch(timeEntriesProvider(params));
