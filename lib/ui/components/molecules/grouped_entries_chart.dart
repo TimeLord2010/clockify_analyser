@@ -224,7 +224,8 @@ class GroupedEntriesChart extends ConsumerWidget {
                     } else {
                       // Sort by duration
                       sectionEntries.sortByNum((x) {
-                        var duration = x.timeInterval.duration;
+                        Duration duration =
+                            x.timeInterval.duration ?? Duration.zero;
                         return duration.inSeconds;
                       }, false);
                     }
@@ -416,7 +417,7 @@ class GroupedEntriesChart extends ConsumerWidget {
     // Calculate total duration for percentage calculations
     final totalDuration = entries.fold<Duration>(
       Duration.zero,
-      (sum, entry) => sum + entry.timeInterval.duration,
+      (sum, entry) => sum + (entry.timeInterval.duration ?? Duration.zero),
     );
 
     // Find entries whose descriptions represent < 3% of total time
@@ -426,7 +427,8 @@ class GroupedEntriesChart extends ConsumerWidget {
     for (final entry in groupedByDescription.entries) {
       final groupDuration = entry.value.fold<Duration>(
         Duration.zero,
-        (sum, timeEntry) => sum + timeEntry.timeInterval.duration,
+        (sum, timeEntry) =>
+            sum + (timeEntry.timeInterval.duration ?? Duration.zero),
       );
 
       final percentage =
@@ -448,9 +450,10 @@ class GroupedEntriesChart extends ConsumerWidget {
 
       if (grouped.containsKey(description)) {
         grouped[description] =
-            grouped[description]! + entry.timeInterval.duration;
+            grouped[description]! +
+            (entry.timeInterval.duration ?? Duration.zero);
       } else {
-        grouped[description] = entry.timeInterval.duration;
+        grouped[description] = (entry.timeInterval.duration ?? Duration.zero);
       }
     }
 

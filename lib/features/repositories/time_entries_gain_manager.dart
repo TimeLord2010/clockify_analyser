@@ -101,7 +101,8 @@ class TimeEntriesGainManager {
     double totalMin = 0.0;
     for (var entries in businessDayEntries.values) {
       for (var entry in entries) {
-        final durationInMin = entry.timeInterval.duration.inMinutes;
+        Duration? duration = entry.timeInterval.duration;
+        int durationInMin = duration?.inMinutes ?? 0;
         totalMin += durationInMin;
       }
     }
@@ -176,7 +177,7 @@ class TimeEntriesGainManager {
       // Calculate total duration for this project
       final totalDuration = projectEntries[projectId]!.fold(
         Duration.zero,
-        (prev, entry) => prev + entry.timeInterval.duration,
+        (prev, entry) => prev + (entry.timeInterval.duration ?? Duration.zero),
       );
 
       // Calculate gain using project's hourly rate
@@ -225,7 +226,7 @@ class TimeEntriesGainManager {
     _projectTotals = projectEntries.map((project, entries) {
       Duration totalDuration = entries.fold(
         Duration.zero,
-        (prev, entry) => prev + entry.timeInterval.duration,
+        (prev, entry) => prev + (entry.timeInterval.duration ?? Duration.zero),
       );
       return MapEntry(project, totalDuration);
     });

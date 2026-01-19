@@ -29,7 +29,7 @@ class TimeEntryGainManager {
 
   double get gain {
     final hourlyRate = _getHourlyRate();
-    final duration = entry.timeInterval.duration;
+    Duration duration = entry.timeInterval.duration ?? Duration.zero;
     final durationInHours = duration.inMinutes / 60.0;
     return hourlyRate.amount * durationInHours;
   }

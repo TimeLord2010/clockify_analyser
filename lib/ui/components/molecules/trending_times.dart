@@ -173,7 +173,12 @@ class TrendingTimes extends StatelessWidget {
         );
 
         // Check if entry overlaps with this time slot
-        if (_timeRangesOverlap(startTime, endTime, slotStart, slotEnd)) {
+        if (_timeRangesOverlap(
+          startTime,
+          endTime ?? DateTime.now(),
+          slotStart,
+          slotEnd,
+        )) {
           // Add the date to the set of days with activity for this slot
           daysWithActivity[weekday]![slot]!.add(date);
         }
@@ -398,7 +403,12 @@ class TrendingTimes extends StatelessWidget {
       final slotEnd = slotStart.add(Duration(minutes: timeGranularityMinutes));
 
       // Check if entry overlaps with this time slot
-      if (_timeRangesOverlap(startTime, endTime, slotStart, slotEnd)) {
+      if (_timeRangesOverlap(
+        startTime,
+        endTime ?? DateTime.now(),
+        slotStart,
+        slotEnd,
+      )) {
         // Find the project for this entry
         final project = gainManager.projects.firstWhereOrNull(
           (p) => p.id == entry.projectId,
@@ -428,7 +438,7 @@ class TrendingTimes extends StatelessWidget {
       final projectName = project?.name ?? 'Unknown Project';
 
       DateTime startTime = entry.timeInterval.start;
-      final endTime = entry.timeInterval.end;
+      DateTime endTime = entry.timeInterval.end ?? DateTime.now();
 
       final startTimeStr =
           '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';

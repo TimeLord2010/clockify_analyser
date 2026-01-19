@@ -125,6 +125,41 @@ final timeEntriesForWorkspaceProvider = FutureProvider<List<TimeEntry>>((
   );
 });
 
+// Provider for time entries from the last 7 days
+final timeEntriesLast7DaysProvider = FutureProvider<List<TimeEntry>>((
+  ref,
+) async {
+  final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
+  final selectedUser = ref.watch(selectedUserProvider);
+
+  return selectedWorkspaceAsync.when(
+    data: (workspace) async {
+      if (workspace == null || selectedUser == null) {
+        return <TimeEntry>[];
+      }
+
+      final now = DateTime.now();
+      final sevenDaysAgo = now.subtract(const Duration(days: 7));
+
+      final params = TimeEntriesParams(
+        workspaceId: workspace.id,
+        userId: selectedUser.id,
+        startDate: sevenDaysAgo,
+        endDate: now,
+      );
+
+      final timeEntriesAsync = ref.watch(timeEntriesProvider(params));
+      return timeEntriesAsync.when(
+        data: (entries) => entries,
+        loading: () => <TimeEntry>[],
+        error: (error, stack) => <TimeEntry>[],
+      );
+    },
+    loading: () => <TimeEntry>[],
+    error: (error, stack) => <TimeEntry>[],
+  );
+});
+
 /// Internal: split an inclusive range into month-based segments.
 List<_MonthSegment> _computeSegments(DateTime firstDay, DateTime lastDay) {
   final segments = <_MonthSegment>[];

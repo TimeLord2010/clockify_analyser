@@ -21,7 +21,7 @@ class TimeEntryViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final duration = entry.timeInterval.duration;
+    Duration duration = entry.timeInterval.duration ?? Duration.zero;
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
 
@@ -121,13 +121,7 @@ class TimeEntryViewer extends StatelessWidget {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            '${formatTime(entry.timeInterval.start)} - ${formatTime(entry.timeInterval.end)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
+                          _timeInterval(),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -186,6 +180,15 @@ class TimeEntryViewer extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Text _timeInterval() {
+    var timeInterval = entry.timeInterval;
+    var end = timeInterval.end;
+    return Text(
+      '${formatTime(timeInterval.start)} - ${end != null ? formatTime(end) : 'Agora'}',
+      style: const TextStyle(fontSize: 12, color: Colors.grey),
     );
   }
 }
