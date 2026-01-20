@@ -19,6 +19,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       child: MaterialApp(
+        title: 'Clockify Analyzer',
         scrollBehavior: MaterialScrollBehavior().copyWith(
           dragDevices: PointerDeviceKind.values.toSet(),
         ),
