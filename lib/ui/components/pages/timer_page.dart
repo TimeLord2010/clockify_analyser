@@ -4,6 +4,7 @@ import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
 class TimerPage extends ConsumerStatefulWidget {
@@ -50,35 +51,39 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       child: FractionallySizedBox(
         widthFactor: .8,
         child: Column(
+          mainAxisAlignment: .center,
           children: [
-            SingleChildScrollView(
-              scrollDirection: .horizontal,
-              child: Row(
-                spacing: 10,
-                children: [
-                  for (final project in projects)
-                    ChoiceChip(
-                      label: Text(project.name),
-                      selected: selectedProject?.id == project.id,
-                      onSelected: (selected) {
-                        setState(() {
-                          selectedProject = selected ? project : null;
-                        });
-                      },
-                      backgroundColor: hexToColor(
-                        project.color,
-                      ).withOpacity(0.3),
-                      selectedColor: hexToColor(project.color),
-                    ),
-                ],
-              ),
-            ),
+            _projectList(projects),
+            Gap(20),
             _textFieldBar(),
-            SizedBox(height: 20),
+            Gap(20),
             _buildSuggestions(relevantTimeEntries, projects),
             // TODO: If there is a time entry not finished, we must
           ],
         ),
+      ),
+    );
+  }
+
+  SingleChildScrollView _projectList(List<Project> projects) {
+    return SingleChildScrollView(
+      scrollDirection: .horizontal,
+      child: Row(
+        spacing: 10,
+        children: [
+          for (final project in projects)
+            ChoiceChip(
+              label: Text(project.name),
+              selected: selectedProject?.id == project.id,
+              onSelected: (selected) {
+                setState(() {
+                  selectedProject = selected ? project : null;
+                });
+              },
+              backgroundColor: hexToColor(project.color).withOpacity(0.3),
+              selectedColor: hexToColor(project.color),
+            ),
+        ],
       ),
     );
   }
@@ -135,7 +140,6 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       children: [
         Icon(Icons.timer, size: 40),
         Expanded(
-          // TODO: Disable text field while project is not selected.
           child: TextField(
             controller: descriptionController,
             decoration: InputDecoration(labelText: 'Descrição'),
