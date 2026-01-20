@@ -1,7 +1,10 @@
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/services/logger.dart';
 import 'package:clockify/ui/components/pages/timer_page/suggestion_chip.dart';
+import 'package:clockify/ui/components/pages/timer_page/timer_display.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
+import 'package:clockify/ui/providers/running_timer_provider.dart';
+import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,10 +30,41 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     super.dispose();
   }
 
+  /// Gets the hourly rate for the current user on the selected project
+  double _getHourlyRate(Project project) {
+    final currentUser = ref.read(selectedUserProvider);
+    if (currentUser == null) return 0;
+
+    final membership = project.memberships
+        .where((m) => m.userId == currentUser.id)
+        .firstOrNull;
+
+    return membership?.hourlyRate.amount.toDouble() ?? 0;
+  }
+
+  Future<void> _handleStartStop() async {
+    final runningTimerState = ref.read(runningTimerProvider);
+    final runningTimerNotifier = ref.read(runningTimerProvider.notifier);
+
+    if (runningTimerState.hasRunningTimer) {
+      // Stop timer
+      await runningTimerNotifier.stopTimer();
+    } else {
+      // Start timer
+      if (selectedProject == null) return;
+
+      await runningTimerNotifier.startTimer(
+        projectId: selectedProject!.id,
+        description: descriptionController.text,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final projects = ref.watch(projectsProvider);
     final entriesAsync = ref.watch(timeEntriesLast7DaysProvider);
+    final runningTimerState = ref.watch(runningTimerProvider);
 
     // Fetch entries from the last 7 days
     final relevantTimeEntries = entriesAsync.when(
@@ -48,20 +82,52 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       },
     );
 
+    // Determine if timer is running
+    final isTimerRunning = runningTimerState.hasRunningTimer;
+    final runningEntry = runningTimerState.entry;
+
+    // Get the project for the running timer
+    Project? runningProject;
+    if (isTimerRunning && runningEntry != null) {
+      runningProject = projects
+          .where((p) => p.id == runningEntry.projectId)
+          .firstOrNull;
+    }
+
     return Center(
       child: FractionallySizedBox(
         widthFactor: .9,
         child: SingleChildScrollView(
-          padding: .fromLTRB(20, 20, 20, 100),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
           child: Column(
-            mainAxisAlignment: .center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _projectList(projects),
-              Gap(20),
-              _textFieldBar(),
-              Gap(20),
-              _buildSuggestions(relevantTimeEntries, projects),
-              // TODO: If there is a time entry not finished, we must
+              // Only show project selector when not running
+              if (!isTimerRunning) _projectList(projects),
+              if (!isTimerRunning) const Gap(20),
+
+              _textFieldBar(isTimerRunning, runningTimerState.isLoading),
+              const Gap(20),
+
+              // Show either timer display or suggestions
+              if (isTimerRunning && runningProject != null)
+                TimerDisplay(
+                  startTime: runningEntry!.timeInterval.start,
+                  hourlyRate: _getHourlyRate(runningProject),
+                  projectColor: hexToColor(runningProject.color),
+                  projectName: runningProject.name,
+                )
+              else
+                _buildSuggestions(relevantTimeEntries, projects),
+
+              // Error display
+              if (runningTimerState.error != null) ...[
+                const Gap(20),
+                Text(
+                  'Erro: ${runningTimerState.error}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ],
             ],
           ),
         ),
@@ -181,21 +247,30 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     );
   }
 
-  Row _textFieldBar() {
+  Row _textFieldBar(bool isTimerRunning, bool isLoading) {
     return Row(
       spacing: 20,
       children: [
-        Icon(Icons.timer, size: 40),
+        Icon(
+          isTimerRunning ? Icons.timer : Icons.timer_outlined,
+          size: 40,
+          color: isTimerRunning ? Colors.green : null,
+        ),
         Expanded(
           child: TextField(
             controller: descriptionController,
-            decoration: InputDecoration(labelText: 'Descrição'),
+            decoration: const InputDecoration(labelText: 'Descrição'),
+            enabled: !isTimerRunning, // Disable when timer is running
           ),
         ),
-        TextButton(
-          onPressed: selectedProject != null ? () {} : null,
-          child: Text('Começar'),
-        ),
+        isLoading
+            ? const CircularProgressIndicator()
+            : TextButton(
+                onPressed: (isTimerRunning || selectedProject != null)
+                    ? _handleStartStop
+                    : null,
+                child: Text(isTimerRunning ? 'Parar' : 'Começar'),
+              ),
       ],
     );
   }
