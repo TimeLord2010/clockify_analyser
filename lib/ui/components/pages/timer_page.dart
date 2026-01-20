@@ -49,17 +49,20 @@ class _TimerPageState extends ConsumerState<TimerPage> {
 
     return Center(
       child: FractionallySizedBox(
-        widthFactor: .8,
-        child: Column(
-          mainAxisAlignment: .center,
-          children: [
-            _projectList(projects),
-            Gap(20),
-            _textFieldBar(),
-            Gap(20),
-            _buildSuggestions(relevantTimeEntries, projects),
-            // TODO: If there is a time entry not finished, we must
-          ],
+        widthFactor: .9,
+        child: SingleChildScrollView(
+          padding: .fromLTRB(20, 20, 20, 100),
+          child: Column(
+            mainAxisAlignment: .center,
+            children: [
+              _projectList(projects),
+              Gap(20),
+              _textFieldBar(),
+              Gap(20),
+              _buildSuggestions(relevantTimeEntries, projects),
+              // TODO: If there is a time entry not finished, we must
+            ],
+          ),
         ),
       ),
     );
@@ -93,10 +96,8 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       return SizedBox.shrink();
     }
 
-    // Count occurrences of each project+description combination
-    final Map<String, int> combinationCounts = {};
-    final Map<String, ({Project project, String description})> combinationData =
-        {};
+    // Group descriptions by project and count occurrences
+    final Map<String, Map<String, int>> projectDescriptions = {};
 
     for (final entry in entries) {
       if (entry.description.isEmpty) continue;
@@ -106,30 +107,66 @@ class _TimerPageState extends ConsumerState<TimerPage> {
           .firstOrNull;
       if (project == null) continue;
 
-      final key = '${entry.projectId}:${entry.description}';
-      combinationCounts[key] = (combinationCounts[key] ?? 0) + 1;
-      combinationData[key] = (project: project, description: entry.description);
+      projectDescriptions.putIfAbsent(entry.projectId, () => {});
+      projectDescriptions[entry.projectId]![entry.description] =
+          (projectDescriptions[entry.projectId]![entry.description] ?? 0) + 1;
     }
 
-    // Sort by frequency and take top 5
-    final sortedCombinations = combinationCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    // Sort projects by total number of entries
+    final sortedProjects = projectDescriptions.entries.toList()
+      ..sort((a, b) {
+        final aTotal = a.value.values.reduce((sum, count) => sum + count);
+        final bTotal = b.value.values.reduce((sum, count) => sum + count);
+        return bTotal.compareTo(aTotal);
+      });
 
-    final topCombinations = sortedCombinations.take(5).toList();
+    // Take top 4 projects
+    final topProjects = sortedProjects.take(4).toList();
 
-    if (topCombinations.isEmpty) {
+    if (topProjects.isEmpty) {
       return SizedBox.shrink();
     }
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (final combination in topCombinations)
-          _suggestion(
-            combinationData[combination.key]!.project,
-            combinationData[combination.key]!.description,
-          ),
+        for (final projectEntry in topProjects) ...[
+          _buildProjectRow(projectEntry.key, projectEntry.value, projects),
+          Gap(20),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildProjectRow(
+    String projectId,
+    Map<String, int> descriptions,
+    List<Project> projects,
+  ) {
+    final project = projects.where((p) => p.id == projectId).firstOrNull;
+    if (project == null) return SizedBox.shrink();
+
+    // Sort descriptions by frequency and take top 3
+    final sortedDescriptions = descriptions.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topDescriptions = sortedDescriptions.take(3).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          project.name,
+          style: TextStyle(fontSize: 12, color: hexToColor(project.color)),
+        ),
+        Gap(8),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final description in topDescriptions)
+              _suggestion(project, description.key),
+          ],
+        ),
       ],
     );
   }
