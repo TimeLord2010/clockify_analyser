@@ -1,5 +1,6 @@
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/services/logger.dart';
+import 'package:clockify/ui/components/pages/timer_page/suggestion_chip.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,7 @@ class _TimerPageState extends ConsumerState<TimerPage> {
                   selectedProject = selected ? project : null;
                 });
               },
-              backgroundColor: hexToColor(project.color).withOpacity(0.3),
+              backgroundColor: hexToColor(project.color).withValues(alpha: 0.3),
               selectedColor: hexToColor(project.color),
             ),
         ],
@@ -164,7 +165,16 @@ class _TimerPageState extends ConsumerState<TimerPage> {
           runSpacing: 10,
           children: [
             for (final description in topDescriptions)
-              _suggestion(project, description.key),
+              SuggestionChip(
+                description: description.key,
+                onPressed: () {
+                  setState(() {
+                    selectedProject = project;
+                    descriptionController.text = description.key;
+                  });
+                },
+                project: project,
+              ),
           ],
         ),
       ],
@@ -187,25 +197,6 @@ class _TimerPageState extends ConsumerState<TimerPage> {
           child: Text('Começar'),
         ),
       ],
-    );
-  }
-
-  Widget _suggestion(Project project, String description) {
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedProject = project;
-          descriptionController.text = description;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: hexToColor(project.color).withOpacity(0.8),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(description, style: TextStyle(color: Colors.white)),
-      ),
     );
   }
 }

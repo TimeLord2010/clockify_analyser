@@ -1,7 +1,7 @@
 import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
 import 'package:clockify/ui/components/molecules/workspace/icon_workspace_picker.dart';
 import 'package:clockify/ui/components/organisms/workspace_summary.dart';
-import 'package:clockify/ui/components/pages/timer_page.dart';
+import 'package:clockify/ui/components/pages/timer_page/timer_page.dart';
 import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
