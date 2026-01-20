@@ -1,3 +1,4 @@
+import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/services/logger.dart';
 import 'package:clockify/ui/components/pages/timer_page/suggestion_chip.dart';
@@ -31,10 +32,18 @@ class _TimerPageState extends ConsumerState<TimerPage> {
   }
 
   /// Gets the hourly rate for the current user on the selected project
+  /// Prioritizes custom override rates from LocalStorage over Clockify rates
   double _getHourlyRate(Project project) {
     final currentUser = ref.read(selectedUserProvider);
     if (currentUser == null) return 0;
 
+    // Check for custom hourly rate override
+    final customRate = LocalStorageModule.getHourlyRate(project.id);
+    if (customRate != null) {
+      return customRate;
+    }
+
+    // Fall back to project membership hourly rate
     final membership = project.memberships
         .where((m) => m.userId == currentUser.id)
         .firstOrNull;

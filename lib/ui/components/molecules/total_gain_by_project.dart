@@ -26,7 +26,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(Duration(milliseconds: 50), () {
         showGain = true;
-        setState(() {});
+        if (mounted) setState(() {});
       });
     });
     super.initState();

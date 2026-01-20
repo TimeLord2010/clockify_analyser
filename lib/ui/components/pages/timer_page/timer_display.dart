@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class TimerDisplay extends StatefulWidget {
@@ -62,6 +63,7 @@ class _TimerDisplayState extends State<TimerDisplay> {
 
     return Container(
       padding: const EdgeInsets.all(24),
+      constraints: BoxConstraints(minWidth: 300),
       decoration: BoxDecoration(
         color: widget.projectColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
@@ -101,10 +103,7 @@ class _TimerDisplayState extends State<TimerDisplay> {
           const SizedBox(height: 4),
           Text(
             'R\$ ${widget.hourlyRate.toStringAsFixed(2)}/hora',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
         ],
       ),
