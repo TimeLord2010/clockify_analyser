@@ -1,7 +1,9 @@
 import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
 import 'package:clockify/ui/components/molecules/workspace/icon_workspace_picker.dart';
+import 'package:clockify/ui/components/molecules/workspace/workspace_picker.dart';
 import 'package:clockify/ui/components/organisms/workspace_summary.dart';
 import 'package:clockify/ui/components/pages/timer_page/timer_page.dart';
+import 'package:clockify/ui/protocols/remove_api_key.dart';
 import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +30,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       body: selectedWorkspaceAsync.when(
         data: (selectedWorkspace) {
           if (selectedWorkspace == null) {
-            return Center(child: Text('Please select a workspace'));
+            return Center(child: WorkspacePicker());
+            // return Center(child: Text('Por favor, selecione um workspace.'));
           }
           return _activeContent(selectedWorkspace);
         },
@@ -39,9 +42,21 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Icon(Icons.error, color: Colors.red, size: 48),
               SizedBox(height: 16),
-              Text('Error loading workspaces'),
+              Text('Falha ao carregar workspaces'),
               SizedBox(height: 8),
               Text(error.toString()),
+
+              // Likely invalid api key
+              if (error is ClockifyAuthException &&
+                  error.statusCode == 401) ...[
+                Gap(10),
+                ElevatedButton(
+                  onPressed: () {
+                    removeApiKey(ref, context, isMounted: () => mounted);
+                  },
+                  child: Text('Remover chave de api'),
+                ),
+              ],
             ],
           ),
         ),

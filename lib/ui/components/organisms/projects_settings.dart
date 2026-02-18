@@ -3,12 +3,9 @@ import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/molecules/workspace/workspace_picker.dart';
-import 'package:clockify/ui/components/screens/main_screen.dart';
+import 'package:clockify/ui/protocols/remove_api_key.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
-import 'package:clockify/ui/providers/selected_workspace_provider.dart';
-import 'package:clockify/ui/providers/time_entries_provider.dart';
-import 'package:clockify/ui/providers/users_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
@@ -195,8 +192,11 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
             ),
             TextButton(
               onPressed: () {
+                // Dismissing dialog
                 Navigator.of(context).pop();
-                _removeApiKey();
+
+                // Removing api key from storage and memory
+                removeApiKey(ref, context, isMounted: () => mounted);
               },
               child: Text('Remover'),
             ),
@@ -204,31 +204,5 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
         );
       },
     );
-  }
-
-  void _removeApiKey() {
-    // Use the API key provider to remove the key
-    ref.read(apiKeyProvider.notifier).removeApiKey();
-
-    // Clear workspace and user selections
-    ref.read(selectedWorkspaceProvider.notifier).clearSelection();
-    ref.read(selectedUserProvider.notifier).clearSelection();
-
-    // Invalidate all providers to reset their state
-    ref.invalidate(selectedWorkspaceProvider);
-    ref.invalidate(usersProvider);
-    ref.invalidate(projectsProvider);
-    ref.invalidate(timeEntriesForWorkspaceProvider);
-
-    // Navigate back or show a message
-    if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Chave de API removida com sucesso!'),
-          duration: Duration(seconds: 4),
-        ),
-      );
-    }
   }
 }
