@@ -40,7 +40,7 @@ class WorkspaceSummary extends ConsumerWidget {
       },
       loading: () => Center(child: CircularProgressIndicator()),
       error: (error, stack) =>
-          Center(child: Text('Error loading time entries')),
+          Center(child: Text('Erro ao carregar entradas de tempo')),
     );
   }
 

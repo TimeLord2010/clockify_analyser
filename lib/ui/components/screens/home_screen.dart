@@ -47,8 +47,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               Text(error.toString()),
 
               // Likely invalid api key
-              if (error is ClockifyAuthException &&
-                  error.statusCode == 401) ...[
+              if (error is ClockifyAuthException) ...[
                 Gap(10),
                 ElevatedButton(
                   onPressed: () {

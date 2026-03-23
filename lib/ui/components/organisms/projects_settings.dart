@@ -37,7 +37,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
     var selectedUser = ref.watch(selectedUserProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Projects'),
+        title: Text('Projetos'),
         centerTitle: false,
         actions: [
           IconButton(
@@ -91,7 +91,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
     var projects = ref.watch(projectsProvider);
 
     if (selectedUser == null) {
-      return Center(child: Text('Select a user'));
+      return Center(child: Text('Selecione um usuário'));
     }
 
     for (var project in projects) {
