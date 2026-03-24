@@ -6,6 +6,7 @@ import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/molecules/trending_times.dart';
+import 'package:clockify/ui/components/molecules/weekly_earnings_chart.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
@@ -14,11 +15,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
-class WorkspaceSummary extends ConsumerWidget {
+class WorkspaceSummary extends ConsumerStatefulWidget {
   const WorkspaceSummary({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WorkspaceSummary> createState() => _WorkspaceSummaryState();
+}
+
+class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
+  bool _showHeatmap = false;
+
+  @override
+  Widget build(BuildContext context) {
     var projects = ref.watch(projectsProvider);
     var entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
     var selectedUser = ref.watch(selectedUserProvider);
@@ -36,7 +44,7 @@ class WorkspaceSummary extends ConsumerWidget {
           currentUserId: selectedUser?.id,
         );
 
-        return _buildContent(context, ref, entries, gainManager, projectMap);
+        return _buildContent(context, entries, gainManager, projectMap);
       },
       loading: () => Center(child: CircularProgressIndicator()),
       error: (error, stack) =>
@@ -46,14 +54,13 @@ class WorkspaceSummary extends ConsumerWidget {
 
   Widget _buildContent(
     BuildContext context,
-    WidgetRef ref,
     List<dynamic> entries,
     TimeEntriesGainManager gainManager,
     Map<String, Project> projectMap,
   ) {
     return Column(
       children: [
-        _filters(context, ref),
+        _filters(context),
         Gap(5),
         Container(
           padding: EdgeInsets.symmetric(horizontal: 5),
@@ -63,14 +70,41 @@ class WorkspaceSummary extends ConsumerWidget {
         Gap(5),
         SizedBox(height: 110, child: TotalByDay(gainManager: gainManager)),
         Gap(2),
-        SizedBox(height: 200, child: TrendingTimes(gainManager: gainManager)),
-        Gap(5),
+        SizedBox(
+          height: 200,
+          child: WeeklyEarningsChart(gainManager: gainManager),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: TextButton.icon(
+              onPressed: () => setState(() => _showHeatmap = !_showHeatmap),
+              icon: Icon(
+                _showHeatmap ? Icons.expand_less : Icons.expand_more,
+                size: 16,
+              ),
+              label: Text(
+                _showHeatmap ? 'Hide activity heatmap' : 'Show activity heatmap',
+                style: TextStyle(fontSize: 12),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey.shade600,
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+            ),
+          ),
+        ),
+        if (_showHeatmap) ...[
+          SizedBox(height: 200, child: TrendingTimes(gainManager: gainManager)),
+          Gap(5),
+        ],
         Expanded(child: GroupedEntriesChart()),
       ],
     );
   }
 
-  Widget _filters(BuildContext context, WidgetRef ref) {
+  Widget _filters(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: LayoutBuilder(

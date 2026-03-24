@@ -105,7 +105,7 @@ class TotalByDay extends StatelessWidget {
         };
 
         return Tooltip(
-          message: 'Total: ${totalDayGain.toStringAsFixed(2)}',
+          message: _buildDayTooltip(dt, totals, totalDayGain),
           preferBelow: false,
           child: SizedBox(
             width: shouldShowMonth ? 50 : 35,
@@ -156,6 +156,50 @@ class TotalByDay extends StatelessWidget {
       },
       itemCount: allDates.length,
     );
+  }
+
+  String _buildDayTooltip(
+    DateTime dt,
+    Map<String, double> totals,
+    double totalDayGain,
+  ) {
+    if (totalDayGain == 0) return '';
+
+    final dayEntries = gainManager.timeEntries.where((e) {
+      final s = e.timeInterval.start;
+      return s.year == dt.year && s.month == dt.month && s.day == dt.day;
+    }).toList();
+
+    final totalDuration = dayEntries.fold(
+      Duration.zero,
+      (d, e) => d + (e.timeInterval.duration ?? Duration.zero),
+    );
+    final hours = totalDuration.inMinutes ~/ 60;
+    final minutes = totalDuration.inMinutes % 60;
+
+    final lines = <String>[
+      '${hours}h ${minutes.toString().padLeft(2, '0')}m  |  Total: ${totalDayGain.toStringAsFixed(2)}',
+    ];
+
+    for (final entry in totals.entries) {
+      final project = gainManager.projects.firstWhereOrNull(
+        (p) => p.id == entry.key,
+      );
+      final projectName = project?.name ?? 'Unknown';
+      final projectDuration = dayEntries
+          .where((e) => e.projectId == entry.key)
+          .fold(
+            Duration.zero,
+            (d, e) => d + (e.timeInterval.duration ?? Duration.zero),
+          );
+      final ph = projectDuration.inMinutes ~/ 60;
+      final pm = projectDuration.inMinutes % 60;
+      lines.add(
+        '$projectName: ${ph}h ${pm.toString().padLeft(2, '0')}m  —  ${entry.value.toStringAsFixed(2)}',
+      );
+    }
+
+    return lines.join('\n');
   }
 
   Widget _gainBar(Map<String, double> totals, double totalDayGain) {
