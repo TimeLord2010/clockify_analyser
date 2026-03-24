@@ -81,11 +81,11 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
             child: TextButton.icon(
               onPressed: () => setState(() => _showHeatmap = !_showHeatmap),
               icon: Icon(
-                _showHeatmap ? Icons.expand_less : Icons.expand_more,
+                _showHeatmap ? Icons.bar_chart : Icons.grid_on,
                 size: 16,
               ),
               label: Text(
-                _showHeatmap ? 'Hide activity heatmap' : 'Show activity heatmap',
+                _showHeatmap ? 'Show entries' : 'Show activity heatmap',
                 style: TextStyle(fontSize: 12),
               ),
               style: TextButton.styleFrom(
@@ -95,11 +95,11 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
             ),
           ),
         ),
-        if (_showHeatmap) ...[
-          SizedBox(height: 200, child: TrendingTimes(gainManager: gainManager)),
-          Gap(5),
-        ],
-        Expanded(child: GroupedEntriesChart()),
+        Expanded(
+          child: _showHeatmap
+              ? TrendingTimes(gainManager: gainManager)
+              : GroupedEntriesChart(),
+        ),
       ],
     );
   }
