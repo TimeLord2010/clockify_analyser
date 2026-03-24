@@ -36,7 +36,7 @@ class TrendingTimes extends StatelessWidget {
   final double _weekdayColumnWidth = 60;
 
   /// Width of each time slot column in the grid.
-  final double _columnWidth = 45;
+  final double _columnWidth = 38;
 
   @override
   Widget build(BuildContext context) {
@@ -220,6 +220,10 @@ class TrendingTimes extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+        borderRadius: BorderRadius.only(
+          topLeft: .circular(8),
+          topRight: .circular(8),
+        ),
       ),
       child: Row(
         children: [
@@ -307,7 +311,7 @@ class TrendingTimes extends StatelessWidget {
       child: Text(
         displayText,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w500,
           color: percentage > 50 ? Colors.white : Colors.black87,
         ),

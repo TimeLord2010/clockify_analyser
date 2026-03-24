@@ -62,45 +62,49 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
       children: [
         _filters(context),
         Gap(5),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 5),
-          height: 68,
-          child: TotalGainByProject(gainManager: gainManager),
-        ),
+        _topBar(gainManager),
         Gap(5),
-        SizedBox(height: 110, child: TotalByDay(gainManager: gainManager)),
+        TotalByDay(gainManager: gainManager, height: 110),
         Gap(2),
+        Expanded(child: WeeklyEarningsChart(gainManager: gainManager)),
+        _toggleChartButton(),
+        Gap(5),
         SizedBox(
           height: 200,
-          child: WeeklyEarningsChart(gainManager: gainManager),
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: TextButton.icon(
-              onPressed: () => setState(() => _showHeatmap = !_showHeatmap),
-              icon: Icon(
-                _showHeatmap ? Icons.bar_chart : Icons.grid_on,
-                size: 16,
-              ),
-              label: Text(
-                _showHeatmap ? 'Show entries' : 'Show activity heatmap',
-                style: TextStyle(fontSize: 12),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey.shade600,
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
           child: _showHeatmap
               ? TrendingTimes(gainManager: gainManager)
               : GroupedEntriesChart(),
         ),
       ],
+    );
+  }
+
+  Container _topBar(TimeEntriesGainManager gainManager) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 5),
+      height: 68,
+      child: TotalGainByProject(gainManager: gainManager),
+    );
+  }
+
+  Align _toggleChartButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: TextButton.icon(
+          onPressed: () => setState(() => _showHeatmap = !_showHeatmap),
+          icon: Icon(_showHeatmap ? Icons.bar_chart : Icons.grid_on, size: 16),
+          label: Text(
+            _showHeatmap ? 'Show entries' : 'Show activity heatmap',
+            style: TextStyle(fontSize: 12),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.grey.shade600,
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ),
+        ),
+      ),
     );
   }
 

@@ -9,9 +9,10 @@ import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TotalByDay extends StatelessWidget {
-  const TotalByDay({super.key, required this.gainManager});
+  const TotalByDay({super.key, required this.gainManager, this.height});
 
   final TimeEntriesGainManager gainManager;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -70,91 +71,96 @@ class TotalByDay extends StatelessWidget {
     var monthsInEntries = {for (var entry in entryDates) entry.month};
     var shouldShowMonth = monthsInEntries.length > 1;
 
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      cacheExtent: 2000,
-      padding: EdgeInsets.only(bottom: 5),
-      itemBuilder: (context, index) {
-        var dt = allDates.elementAt(index);
+    return SizedBox(
+      height: height,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        cacheExtent: 2000,
+        padding: EdgeInsets.only(bottom: 5),
+        itemBuilder: (context, index) {
+          var dt = allDates.elementAt(index);
 
-        var parts = [
-          dt.day,
-          if (shouldShowMonth) dt.month,
-        ].map((x) => x.toString().padLeft(2, '0'));
-        var totals = gainManager.getTotalOnDate(dt.year, dt.month, dt.day);
+          var parts = [
+            dt.day,
+            if (shouldShowMonth) dt.month,
+          ].map((x) => x.toString().padLeft(2, '0'));
+          var totals = gainManager.getTotalOnDate(dt.year, dt.month, dt.day);
 
-        // Calculate total gain for the day
-        double totalDayGain = totals.values.fold(
-          0.0,
-          (prev, gain) => prev + gain,
-        );
+          // Calculate total gain for the day
+          double totalDayGain = totals.values.fold(
+            0.0,
+            (prev, gain) => prev + gain,
+          );
 
-        // Calculate the height based on the proportion of max total gain
-        double barHeightMultiplier = maxTotalGain == 0
-            ? 0
-            : (totalDayGain / maxTotalGain);
+          // Calculate the height based on the proportion of max total gain
+          double barHeightMultiplier = maxTotalGain == 0
+              ? 0
+              : (totalDayGain / maxTotalGain);
 
-        String shortWeekDay = switch (dt.weekday) {
-          1 => 'SEG',
-          2 => 'TER',
-          3 => 'QUA',
-          4 => 'QUI',
-          5 => 'SEX',
-          6 => 'SAB',
-          _ => 'DOM',
-        };
+          String shortWeekDay = switch (dt.weekday) {
+            1 => 'SEG',
+            2 => 'TER',
+            3 => 'QUA',
+            4 => 'QUI',
+            5 => 'SEX',
+            6 => 'SAB',
+            _ => 'DOM',
+          };
 
-        return Tooltip(
-          message: _buildDayTooltip(dt, totals, totalDayGain),
-          preferBelow: false,
-          child: SizedBox(
-            width: shouldShowMonth ? 50 : 35,
-            child: Column(
-              children: [
-                // Vertical bar with project colors
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          var barHeight =
-                              barHeightMultiplier * constraints.maxHeight;
-                          var effectDalay = Duration(milliseconds: index * 100);
-                          return Animate(
-                            effects: [
-                              ScaleEffect(
-                                delay: effectDalay,
-                                curve: Curves.decelerate,
-                                begin: Offset(1, 0),
-                                end: Offset(1, 1),
-                                alignment: Alignment.bottomCenter,
+          return Tooltip(
+            message: _buildDayTooltip(dt, totals, totalDayGain),
+            preferBelow: false,
+            child: SizedBox(
+              width: shouldShowMonth ? 50 : 35,
+              child: Column(
+                children: [
+                  // Vertical bar with project colors
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            var barHeight =
+                                barHeightMultiplier * constraints.maxHeight;
+                            var effectDalay = Duration(
+                              milliseconds: index * 100,
+                            );
+                            return Animate(
+                              effects: [
+                                ScaleEffect(
+                                  delay: effectDalay,
+                                  curve: Curves.decelerate,
+                                  begin: Offset(1, 0),
+                                  end: Offset(1, 1),
+                                  alignment: Alignment.bottomCenter,
+                                ),
+                              ],
+                              child: SizedBox(
+                                width: 15,
+                                height: barHeight,
+                                child: _gainBar(totals, totalDayGain),
                               ),
-                            ],
-                            child: SizedBox(
-                              width: 15,
-                              height: barHeight,
-                              child: _gainBar(totals, totalDayGain),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Gap(5),
-                Text(parts.join('/'), style: TextStyle(fontSize: 11)),
-                Text(
-                  shortWeekDay,
-                  style: TextStyle(color: Colors.grey, fontSize: 10),
-                ),
-              ],
+                  Gap(5),
+                  Text(parts.join('/'), style: TextStyle(fontSize: 11)),
+                  Text(
+                    shortWeekDay,
+                    style: TextStyle(color: Colors.grey, fontSize: 10),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
-      itemCount: allDates.length,
+          );
+        },
+        itemCount: allDates.length,
+      ),
     );
   }
 
