@@ -26,44 +26,72 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final selectedWorkspaceAsync = ref.watch(selectedWorkspaceProvider);
 
-    return Scaffold(
-      body: selectedWorkspaceAsync.when(
-        data: (selectedWorkspace) {
-          if (selectedWorkspace == null) {
-            return Center(child: WorkspacePicker());
-            // return Center(child: Text('Por favor, selecione um workspace.'));
-          }
-          return _activeContent(selectedWorkspace);
-        },
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error, color: Colors.red, size: 48),
-              SizedBox(height: 16),
-              Text('Falha ao carregar workspaces'),
-              SizedBox(height: 8),
-              Text(error.toString()),
+    return selectedWorkspaceAsync.when(
+      data: (selectedWorkspace) {
+        if (selectedWorkspace == null) {
+          return Center(child: WorkspacePicker());
+        }
+        return _content(selectedWorkspace);
+      },
+      loading: () => Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, color: Colors.red, size: 48),
+            SizedBox(height: 16),
+            Text('Falha ao carregar workspaces'),
+            SizedBox(height: 8),
+            Text(error.toString()),
 
-              // Likely invalid api key
-              if (error is ClockifyAuthException) ...[
-                Gap(10),
-                ElevatedButton(
-                  onPressed: () {
-                    removeApiKey(ref, context, isMounted: () => mounted);
-                  },
-                  child: Text('Remover chave de api'),
-                ),
-              ],
+            // Likely invalid api key
+            if (error is ClockifyAuthException) ...[
+              Gap(10),
+              ElevatedButton(
+                onPressed: () {
+                  removeApiKey(ref, context, isMounted: () => mounted);
+                },
+                child: Text('Remover chave de api'),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _activeContent(Workspace selectedWorkspace) {
+  Widget _content(Workspace selectedWorkspace) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var isNarrow = constraints.maxWidth < 600;
+        if (isNarrow) {
+          return Scaffold(
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: selectedPage,
+              onTap: (value) {
+                selectedPage = value;
+                setState(() {});
+              },
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.timelapse_rounded),
+                  label: 'Temporizador',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.bar_chart_rounded),
+                  label: 'Relatório',
+                ),
+              ],
+            ),
+            body: _activeContent(selectedWorkspace),
+          );
+        }
+        return _wideLayout(selectedWorkspace);
+      },
+    );
+  }
+
+  Row _wideLayout(Workspace selectedWorkspace) {
     return Row(
       children: [
         NavigationRail(
@@ -89,14 +117,16 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           trailingAtBottom: true,
         ),
-        Expanded(
-          child: switch (selectedPage) {
-            0 => TimerPage(),
-            1 => WorkspaceSummary(key: ValueKey(selectedWorkspace.id)),
-            _ => Placeholder(),
-          },
-        ),
+        Expanded(child: _activeContent(selectedWorkspace)),
       ],
     );
+  }
+
+  Widget _activeContent(Workspace selectedWorkspace) {
+    return switch (selectedPage) {
+      0 => TimerPage(),
+      1 => WorkspaceSummary(key: ValueKey(selectedWorkspace.id)),
+      _ => Placeholder(),
+    };
   }
 }
