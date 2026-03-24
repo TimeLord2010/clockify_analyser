@@ -66,22 +66,30 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
         var isNarrow = constraints.maxWidth < 600;
         if (isNarrow) {
           return Scaffold(
-            bottomNavigationBar: BottomNavigationBar(
-              currentIndex: selectedPage,
-              onTap: (value) {
-                selectedPage = value;
-                setState(() {});
-              },
-              items: [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.timelapse_rounded),
-                  label: 'Temporizador',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.bar_chart_rounded),
-                  label: 'Relatório',
-                ),
-              ],
+            bottomNavigationBar: BottomAppBar(
+              padding: EdgeInsets.zero,
+              height: 56,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: .spaceAround,
+                      children: [
+                        _bottomNavItem(
+                          Icons.timelapse_rounded,
+                          'Temporizador',
+                          0,
+                        ),
+                        _bottomNavItem(Icons.bar_chart_rounded, 'Relatório', 1),
+                      ],
+                    ),
+                  ),
+                  Gap(5),
+                  IconWorkspacePicker(),
+                  Gap(5),
+                  ProjectsSettingsButton(),
+                ],
+              ),
             ),
             body: _activeContent(selectedWorkspace),
           );
@@ -119,6 +127,25 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
         ),
         Expanded(child: _activeContent(selectedWorkspace)),
       ],
+    );
+  }
+
+  Widget _bottomNavItem(IconData icon, String label, int index) {
+    final isSelected = selectedPage == index;
+    final color = isSelected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => selectedPage = index),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color),
+            Text(label, style: TextStyle(fontSize: 12, color: color)),
+          ],
+        ),
+      ),
     );
   }
 
