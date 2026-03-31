@@ -97,9 +97,9 @@ class TimeEntriesGainManager {
     // If no business days with entries, return 0
     if (businessDayEntries.isEmpty) return Duration.zero;
 
-    // Calculate total hours worked on business days
+    // Calculate total hours worked across all days (including weekends)
     double totalMin = 0.0;
-    for (var entries in businessDayEntries.values) {
+    for (var entries in entriesByDate.values) {
       for (var entry in entries) {
         Duration? duration = entry.timeInterval.duration;
         int durationInMin = duration?.inMinutes ?? 0;
