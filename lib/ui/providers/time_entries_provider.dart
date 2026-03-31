@@ -1,6 +1,7 @@
 import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/selected_workspace_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
@@ -50,6 +51,7 @@ final timeEntriesProvider =
         userId: userId,
         workspaceId: workspaceId,
       ) = params;
+      end = DateTime(end.year, end.month, end.day, 23, 59, 59);
       final segments = _computeSegments(start, end);
       final List<TimeEntry> result = [];
       for (final seg in segments) {
@@ -69,6 +71,9 @@ final timeEntriesProvider =
 
         // fetch from API for this segment
 
+        debugPrint(
+          'searching for entries between ${seg.firstDay} and ${seg.lastDay}',
+        );
         final fetched = await VitClockify.timeEntries.getForUser(
           workspaceId: workspaceId,
           userId: userId,
@@ -126,13 +131,14 @@ final timeEntriesForWorkspaceProvider = FutureProvider<List<TimeEntry>>((
 });
 
 // Provider for last 7 days date range (stable, only updates once per day)
-final last7DaysDateRangeProvider = Provider<({DateTime startDate, DateTime endDate})>((ref) {
-  final now = DateTime.now();
-  // Normalize to midnight to ensure stable values throughout the day
-  final endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
-  final startDate = DateTime(now.year, now.month, now.day - 7, 0, 0, 0);
-  return (startDate: startDate, endDate: endDate);
-});
+final last7DaysDateRangeProvider =
+    Provider<({DateTime startDate, DateTime endDate})>((ref) {
+      final now = DateTime.now();
+      // Normalize to midnight to ensure stable values throughout the day
+      final endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
+      final startDate = DateTime(now.year, now.month, now.day - 7, 0, 0, 0);
+      return (startDate: startDate, endDate: endDate);
+    });
 
 // Provider for time entries from the last 7 days
 final timeEntriesLast7DaysProvider = FutureProvider<List<TimeEntry>>((
@@ -174,7 +180,7 @@ List<_MonthSegment> _computeSegments(DateTime firstDay, DateTime lastDay) {
   final endMonth = DateTime(lastDay.year, lastDay.month, 1);
   while (!current.isAfter(endMonth)) {
     final monthStart = DateTime(current.year, current.month, 1);
-    final monthEnd = DateTime(current.year, current.month + 1, 0);
+    final monthEnd = DateTime(current.year, current.month + 1, 0, 23, 59, 59);
     final segFirst = firstDay.isAfter(monthStart) ? firstDay : monthStart;
     final segLast = lastDay.isBefore(monthEnd) ? lastDay : monthEnd;
     segments.add(_MonthSegment(segFirst, segLast));
@@ -205,7 +211,7 @@ class _MonthSegment {
 
   bool get isFullMonth {
     final monthStart = DateTime(year, month, 1);
-    final monthEnd = DateTime(year, month + 1, 0);
+    final monthEnd = DateTime(year, month + 1, 0, 23, 59, 59);
     return firstDay.isAtSameMomentAs(monthStart) &&
         lastDay.isAtSameMomentAs(monthEnd);
   }
