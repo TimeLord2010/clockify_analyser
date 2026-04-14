@@ -51,6 +51,34 @@ class LocalStorageModule {
     }
   }
 
+  static double? get minHoursPerDay {
+    return _sp.containsKey('min_hours_per_day')
+        ? _sp.getDouble('min_hours_per_day')
+        : null;
+  }
+
+  static set minHoursPerDay(double? value) {
+    if (value != null) {
+      _sp.setDouble('min_hours_per_day', value);
+    } else {
+      _sp.remove('min_hours_per_day');
+    }
+  }
+
+  static double? get targetHoursPerDay {
+    return _sp.containsKey('target_hours_per_day')
+        ? _sp.getDouble('target_hours_per_day')
+        : null;
+  }
+
+  static set targetHoursPerDay(double? value) {
+    if (value != null) {
+      _sp.setDouble('target_hours_per_day', value);
+    } else {
+      _sp.remove('target_hours_per_day');
+    }
+  }
+
   static String? get lastSelectedUserId {
     return _sp.getString('last_selected_user_id');
   }

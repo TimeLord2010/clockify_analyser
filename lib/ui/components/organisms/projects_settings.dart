@@ -23,12 +23,27 @@ class ProjectsSettings extends ConsumerStatefulWidget {
 
 class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
   final Map<Project, TextEditingController> controllers = {};
+  late final TextEditingController _minHoursController;
+  late final TextEditingController _targetHoursController;
+
+  @override
+  void initState() {
+    super.initState();
+    _minHoursController = TextEditingController(
+      text: LocalStorageModule.minHoursPerDay?.toString() ?? '',
+    );
+    _targetHoursController = TextEditingController(
+      text: LocalStorageModule.targetHoursPerDay?.toString() ?? '',
+    );
+  }
 
   @override
   void dispose() {
     for (var controller in controllers.values) {
       controller.dispose();
     }
+    _minHoursController.dispose();
+    _targetHoursController.dispose();
     super.dispose();
   }
 
@@ -54,6 +69,8 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
           children: [
             _filters(),
             Gap(10),
+            _dailyHoursSection(),
+            Gap(30),
             Expanded(child: _projectsHourly(selectedUser)),
           ],
         ),
@@ -84,6 +101,63 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
           ],
         );
       },
+    );
+  }
+
+  Widget _dailyHoursSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          _hoursField(
+            label: 'Horas mínimas/dia',
+            controller: _minHoursController,
+            onSave: (value) => LocalStorageModule.minHoursPerDay = value,
+          ),
+          Gap(16),
+          _hoursField(
+            label: 'Horas alvo/dia',
+            controller: _targetHoursController,
+            onSave: (value) => LocalStorageModule.targetHoursPerDay = value,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hoursField({
+    required String label,
+    required TextEditingController controller,
+    required void Function(double? value) onSave,
+  }) {
+    return SizedBox(
+      width: 200,
+      child: TextField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        onSubmitted: (_) {
+          var text = controller.text.trim();
+          if (text.isEmpty) {
+            onSave(null);
+          } else {
+            var parsed = double.tryParse(text);
+            if (parsed != null) onSave(parsed);
+          }
+        },
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: '5',
+          focusedBorder: OutlineInputBorder(),
+          suffixIcon: IconButton(
+            icon: Icon(Icons.clear, size: 16),
+            tooltip: 'Limpar',
+            onPressed: () {
+              controller.clear();
+              onSave(null);
+            },
+          ),
+        ),
+      ),
     );
   }
 

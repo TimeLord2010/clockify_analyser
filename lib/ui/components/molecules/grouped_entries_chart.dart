@@ -125,7 +125,6 @@ class GroupedEntriesChart extends ConsumerWidget {
               touchCallback: (FlTouchEvent event, pieTouchResponse) async {
                 var touchedSection = pieTouchResponse?.touchedSection;
                 var index = touchedSection?.touchedSectionIndex;
-                debugPrint('Clicked on a section with index $index');
 
                 String sectionName = '';
                 List<TimeEntry> sectionEntries = [];
