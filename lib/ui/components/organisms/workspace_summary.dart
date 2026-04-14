@@ -2,11 +2,11 @@ import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
+import 'package:clockify/ui/components/molecules/cumulative_hours_chart.dart';
 import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/molecules/trending_times.dart';
-import 'package:clockify/ui/components/molecules/weekly_earnings_chart.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
@@ -66,7 +66,7 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
         Gap(5),
         TotalByDay(gainManager: gainManager, height: 110),
         Gap(2),
-        Expanded(child: WeeklyEarningsChart(gainManager: gainManager)),
+        Expanded(child: CumulativeHoursChart(gainManager: gainManager)),
         _toggleChartButton(),
         Gap(5),
         SizedBox(

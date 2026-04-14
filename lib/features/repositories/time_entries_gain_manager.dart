@@ -191,6 +191,20 @@ class TimeEntriesGainManager {
     return projectTotals;
   }
 
+  /// Returns total duration worked on a specific date.
+  Duration getDurationOnDate(int year, int month, int day) {
+    final minDt = DateTime(year, month, day);
+    final maxDt = DateTime(year, month, day + 1);
+    return timeEntries
+        .where((e) =>
+            e.timeInterval.start.isAfter(minDt) &&
+            e.timeInterval.start.isBefore(maxDt))
+        .fold(
+          Duration.zero,
+          (acc, e) => acc + (e.timeInterval.duration ?? Duration.zero),
+        );
+  }
+
   /// Clears all cached values (useful if data changes)
   void clearCache() {
     _projectTotals = null;
