@@ -127,6 +127,7 @@ class CumulativeHoursChart extends ConsumerWidget {
                   touchTooltipData: LineTouchTooltipData(
                     getTooltipColor: (_) => Colors.blueGrey.shade700,
                     maxContentWidth: 200,
+                    fitInsideHorizontally: true,
                     getTooltipItems: (spots) {
                       return [
                         for (int i = 0; i < spots.length; i++)
