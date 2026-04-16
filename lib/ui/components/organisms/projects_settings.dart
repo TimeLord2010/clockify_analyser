@@ -134,8 +134,6 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
       width: 200,
       child: TextField(
         controller: controller,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        textInputAction: .done,
         onSubmitted: (_) {
           var text = controller.text.trim();
           if (text.isEmpty) {
