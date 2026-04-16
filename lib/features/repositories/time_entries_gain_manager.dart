@@ -72,43 +72,43 @@ class TimeEntriesGainManager {
   /// Calculate the mean worked time for all the entries.  But only taking into
   /// account the business days.
   Duration get meanByDay {
-    // Group entries by date (ignoring time)
-    Map<DateTime, List<TimeEntry>> entriesByDate = {};
+    if (timeEntries.isEmpty) return Duration.zero;
+
+    // Calculate total minutes and determine the date range of the period
+    double totalMin = 0.0;
+    DateTime? minDate;
+    DateTime? maxDate;
 
     for (var entry in timeEntries) {
-      // Get the date part only (year, month, day)
       final date = DateTime(
         entry.timeInterval.start.year,
         entry.timeInterval.start.month,
         entry.timeInterval.start.day,
       );
 
-      entriesByDate.putIfAbsent(date, () => []).add(entry);
+      if (minDate == null || date.isBefore(minDate)) minDate = date;
+      if (maxDate == null || date.isAfter(maxDate)) maxDate = date;
+
+      totalMin += entry.timeInterval.duration?.inMinutes ?? 0;
     }
 
-    // Filter to business days only (Monday-Friday)
-    Map<DateTime, List<TimeEntry>> businessDayEntries = {};
-    for (var date in entriesByDate.keys) {
-      if (![DateTime.saturday, DateTime.sunday].contains(date.weekday)) {
-        businessDayEntries[date] = entriesByDate[date]!;
+    if (minDate == null || maxDate == null) return Duration.zero;
+
+    // Count all business days (Mon–Fri) in the period, not just days with entries
+    int businessDayCount = 0;
+    DateTime current = minDate;
+    while (!current.isAfter(maxDate)) {
+      if (current.weekday != DateTime.saturday &&
+          current.weekday != DateTime.sunday) {
+        businessDayCount++;
       }
+      current = current.add(const Duration(days: 1));
     }
 
-    // If no business days with entries, return 0
-    if (businessDayEntries.isEmpty) return Duration.zero;
+    if (businessDayCount == 0) return Duration.zero;
 
-    // Calculate total hours worked across all days (including weekends)
-    double totalMin = 0.0;
-    for (var entries in entriesByDate.values) {
-      for (var entry in entries) {
-        Duration? duration = entry.timeInterval.duration;
-        int durationInMin = duration?.inMinutes ?? 0;
-        totalMin += durationInMin;
-      }
-    }
-
-    // Calculate mean: total hours / number of business days
-    return Duration(minutes: totalMin ~/ businessDayEntries.length);
+    // total hours worked / total business days in the period
+    return Duration(minutes: totalMin ~/ businessDayCount);
   }
 
   /// Map of project to its calculated gain
@@ -196,9 +196,11 @@ class TimeEntriesGainManager {
     final minDt = DateTime(year, month, day);
     final maxDt = DateTime(year, month, day + 1);
     return timeEntries
-        .where((e) =>
-            e.timeInterval.start.isAfter(minDt) &&
-            e.timeInterval.start.isBefore(maxDt))
+        .where(
+          (e) =>
+              e.timeInterval.start.isAfter(minDt) &&
+              e.timeInterval.start.isBefore(maxDt),
+        )
         .fold(
           Duration.zero,
           (acc, e) => acc + (e.timeInterval.duration ?? Duration.zero),
