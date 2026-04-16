@@ -180,9 +180,9 @@ class CumulativeHoursChart extends ConsumerWidget {
     return Wrap(
       spacing: 12,
       children: [
-        _legendItem(actualColor, 'Actual'),
-        if (minColor != null) _legendItem(minColor, 'Minimum'),
-        if (targetColor != null) _legendItem(targetColor, 'Target'),
+        _legendItem(actualColor, 'Trabalhadas'),
+        if (minColor != null) _legendItem(minColor, 'Mínimo'),
+        if (targetColor != null) _legendItem(targetColor, 'Alvo'),
       ],
     );
   }
