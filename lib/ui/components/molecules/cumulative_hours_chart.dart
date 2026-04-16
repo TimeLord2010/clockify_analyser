@@ -69,7 +69,7 @@ class CumulativeHoursChart extends ConsumerWidget {
                 minX: 0,
                 maxX: (data.businessDays.length - 1).toDouble(),
                 minY: 0,
-                maxY: maxY * 1.15,
+                maxY: maxY * 1.05,
                 lineBarsData: lines,
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
