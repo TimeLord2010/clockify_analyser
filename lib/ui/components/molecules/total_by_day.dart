@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -126,87 +127,97 @@ class TotalByDay extends StatelessWidget {
             _ => 'DOM',
           };
 
+          final isHoliday = isBrazilianHoliday(dt);
+
           return Tooltip(
             message: _buildDayTooltip(dt, totals, totalDayGain),
             preferBelow: false,
             child: SizedBox(
               width: shouldShowMonth ? 50 : 35,
-              child: Column(
-                children: [
-                  // Vertical bar with project colors
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        var barHeight =
-                            barHeightMultiplier * constraints.maxHeight;
-                        var effectDalay = Duration(milliseconds: index * 100);
+              child: ColoredBox(
+                color: isHoliday
+                    ? Colors.orange.withValues(alpha: 0.08)
+                    : Colors.transparent,
+                child: Column(
+                  children: [
+                    // Vertical bar with project colors
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          var barHeight =
+                              barHeightMultiplier * constraints.maxHeight;
+                          var effectDalay = Duration(milliseconds: index * 50);
 
-                        double? minLineBottom =
-                            minGain != null && maxTotalGain > 0
-                            ? (minGain / maxTotalGain) * constraints.maxHeight
-                            : null;
-                        double? targetLineBottom =
-                            targetGain != null && maxTotalGain > 0
-                            ? (targetGain / maxTotalGain) *
-                                  constraints.maxHeight
-                            : null;
+                          double? minLineBottom =
+                              minGain != null && maxTotalGain > 0
+                              ? (minGain / maxTotalGain) * constraints.maxHeight
+                              : null;
+                          double? targetLineBottom =
+                              targetGain != null && maxTotalGain > 0
+                              ? (targetGain / maxTotalGain) *
+                                    constraints.maxHeight
+                              : null;
 
-                        return Stack(
-                          children: [
-                            if (minLineBottom != null)
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: minLineBottom,
-                                child: CustomPaint(
-                                  painter: _DashedLinePainter(Colors.orange),
-                                  child: const SizedBox(height: 1.5),
+                          return Stack(
+                            children: [
+                              if (minLineBottom != null)
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: minLineBottom,
+                                  child: CustomPaint(
+                                    painter: _DashedLinePainter(Colors.orange),
+                                    child: const SizedBox(height: 1.5),
+                                  ),
                                 ),
-                              ),
-                            if (targetLineBottom != null)
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: targetLineBottom,
-                                child: CustomPaint(
-                                  painter: _DashedLinePainter(Colors.teal),
-                                  child: const SizedBox(height: 1.5),
+                              if (targetLineBottom != null)
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: targetLineBottom,
+                                  child: CustomPaint(
+                                    painter: _DashedLinePainter(Colors.teal),
+                                    child: const SizedBox(height: 1.5),
+                                  ),
                                 ),
-                              ),
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Animate(
-                                  effects: [
-                                    ScaleEffect(
-                                      delay: effectDalay,
-                                      curve: Curves.decelerate,
-                                      begin: Offset(1, 0),
-                                      end: Offset(1, 1),
-                                      alignment: Alignment.bottomCenter,
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Animate(
+                                    effects: [
+                                      ScaleEffect(
+                                        delay: effectDalay,
+                                        curve: Curves.decelerate,
+                                        begin: Offset(1, 0),
+                                        end: Offset(1, 1),
+                                        alignment: Alignment.bottomCenter,
+                                      ),
+                                    ],
+                                    child: SizedBox(
+                                      width: 15,
+                                      height: barHeight,
+                                      child: _gainBar(totals, totalDayGain),
                                     ),
-                                  ],
-                                  child: SizedBox(
-                                    width: 15,
-                                    height: barHeight,
-                                    child: _gainBar(totals, totalDayGain),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  Gap(5),
-                  Text(parts.join('/'), style: TextStyle(fontSize: 11)),
-                  Text(
-                    shortWeekDay,
-                    style: TextStyle(color: Colors.grey, fontSize: 10),
-                  ),
-                ],
+                    Gap(5),
+                    Text(parts.join('/'), style: TextStyle(fontSize: 11)),
+                    Text(
+                      isHoliday ? 'FER' : shortWeekDay,
+                      style: TextStyle(
+                        color: isHoliday ? Colors.orange : Colors.grey,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
