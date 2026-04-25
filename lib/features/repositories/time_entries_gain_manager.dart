@@ -1,4 +1,5 @@
 import 'package:clockify/features/usecases/color/color_to_hex.dart';
+import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
 import 'package:flutter/material.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
@@ -99,7 +100,8 @@ class TimeEntriesGainManager {
     DateTime current = minDate;
     while (!current.isAfter(maxDate)) {
       if (current.weekday != DateTime.saturday &&
-          current.weekday != DateTime.sunday) {
+          current.weekday != DateTime.sunday &&
+          !isBrazilianHoliday(current)) {
         businessDayCount++;
       }
       current = current.add(const Duration(days: 1));

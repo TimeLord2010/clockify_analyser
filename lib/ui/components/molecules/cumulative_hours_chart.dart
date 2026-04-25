@@ -1,4 +1,5 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
+import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -220,7 +221,8 @@ class CumulativeHoursChart extends ConsumerWidget {
     var current = dateRange.startDate;
     while (!current.isAfter(dateRange.endDate)) {
       if (current.weekday != DateTime.saturday &&
-          current.weekday != DateTime.sunday) {
+          current.weekday != DateTime.sunday &&
+          !isBrazilianHoliday(current)) {
         businessDays.add(current);
       }
       current = current.add(const Duration(days: 1));
@@ -260,7 +262,8 @@ class CumulativeHoursChart extends ConsumerWidget {
       // Check if the next day(s) are weekend — if so, fold them into this business day
       DateTime next = day.add(const Duration(days: 1));
       while (next.weekday == DateTime.saturday ||
-          next.weekday == DateTime.sunday) {
+          next.weekday == DateTime.sunday ||
+          isBrazilianHoliday(next)) {
         if (!next.isAfter(dateRange.endDate)) {
           dayDuration += gainManager.getDurationOnDate(
             next.year,
