@@ -128,6 +128,8 @@ class TotalByDay extends StatelessWidget {
           };
 
           final isHoliday = isBrazilianHoliday(dt);
+          final isWeekend =
+              dt.weekday == DateTime.saturday || dt.weekday == DateTime.sunday;
 
           return Tooltip(
             message: _buildDayTooltip(dt, totals, totalDayGain),
@@ -137,6 +139,8 @@ class TotalByDay extends StatelessWidget {
               child: ColoredBox(
                 color: isHoliday
                     ? Colors.orange.withValues(alpha: 0.08)
+                    : isWeekend
+                    ? Colors.blueGrey.withValues(alpha: 0.08)
                     : Colors.transparent,
                 child: Column(
                   children: [
@@ -183,7 +187,7 @@ class TotalByDay extends StatelessWidget {
                               Align(
                                 alignment: Alignment.bottomCenter,
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(5),
                                   child: Animate(
                                     effects: [
                                       ScaleEffect(
