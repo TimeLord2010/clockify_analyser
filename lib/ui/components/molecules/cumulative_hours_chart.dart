@@ -1,6 +1,6 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
-import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
 import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -131,13 +131,12 @@ class CumulativeHoursChart extends ConsumerWidget {
                     fitInsideHorizontally: true,
                     getTooltipItems: (spots) {
                       return [
-                        for (int i = 0; i < spots.length; i++)
+                        for (final spot in spots)
                           () {
-                            final spot = spots[i];
-                            final label = tooltipLabels[i];
+                            final label = tooltipLabels[spot.barIndex];
                             final hours = spot.y.toStringAsFixed(1);
                             final dayIndex = spot.x.toInt();
-                            final gains = gainLists[i];
+                            final gains = gainLists[spot.barIndex];
                             final gainSuffix = dayIndex < gains.length
                                 ? ' (\$${gains[dayIndex].toStringAsFixed(0)})'
                                 : '';
