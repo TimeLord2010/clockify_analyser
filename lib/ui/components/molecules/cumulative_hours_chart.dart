@@ -53,111 +53,134 @@ class CumulativeHoursChart extends ConsumerWidget {
         ? 1.0
         : allValues.reduce((a, b) => a > b ? a : b);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _legend(
-            actualColor,
-            minHours != null ? minColor : null,
-            targetHours != null ? targetColor : null,
-          ),
-          const SizedBox(height: 6),
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                minX: 0,
-                maxX: (data.businessDays.length - 1).toDouble(),
-                minY: 0,
-                maxY: maxY * 1.05,
-                lineBarsData: lines,
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 36,
-                      getTitlesWidget: (value, meta) {
-                        if (value == meta.max || value == meta.min) {
-                          return const SizedBox.shrink();
-                        }
-                        return Text(
-                          '${value.toStringAsFixed(0)}h',
-                          style: const TextStyle(fontSize: 10),
-                        );
-                      },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        var width = constraints.maxWidth;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _legend(
+                actualColor,
+                minHours != null ? minColor : null,
+                targetHours != null ? targetColor : null,
+              ),
+              const SizedBox(height: 6),
+              Expanded(
+                child: LineChart(
+                  LineChartData(
+                    minX: 0,
+                    maxX: (data.businessDays.length - 1).toDouble(),
+                    minY: 0,
+                    maxY: maxY * 1.05,
+                    lineBarsData: lines,
+                    titlesData: FlTitlesData(
+                      leftTitles: _leftTitles(),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: _bottomTitles(data, width),
                     ),
-                  ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 28,
-                      interval: _labelInterval(data.businessDays.length),
-                      getTitlesWidget: (value, meta) {
-                        final i = value.toInt();
-                        if (i < 0 || i >= data.businessDays.length) {
-                          return const SizedBox.shrink();
-                        }
-                        final day = data.businessDays[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            '${day.day.toString().padLeft(2, '0')}/${day.month.toString().padLeft(2, '0')}',
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                        );
-                      },
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY > 0 ? maxY / 4 : 1,
+                      getDrawingHorizontalLine: (_) =>
+                          FlLine(color: Colors.grey.shade200, strokeWidth: 1),
                     ),
-                  ),
-                ),
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: maxY > 0 ? maxY / 4 : 1,
-                  getDrawingHorizontalLine: (_) =>
-                      FlLine(color: Colors.grey.shade200, strokeWidth: 1),
-                ),
-                borderData: FlBorderData(show: false),
-                lineTouchData: LineTouchData(
-                  touchTooltipData: LineTouchTooltipData(
-                    getTooltipColor: (_) => Colors.blueGrey.shade700,
-                    maxContentWidth: 200,
-                    fitInsideHorizontally: true,
-                    getTooltipItems: (spots) {
-                      return [
-                        for (final spot in spots)
-                          () {
-                            final label = tooltipLabels[spot.barIndex];
-                            final hours = spot.y.toStringAsFixed(1);
-                            final dayIndex = spot.x.toInt();
-                            final gains = gainLists[spot.barIndex];
-                            final gainSuffix = dayIndex < gains.length
-                                ? ' (\$${gains[dayIndex].toStringAsFixed(0)})'
-                                : '';
-                            return LineTooltipItem(
-                              '$label: ${hours}h$gainSuffix',
-                              const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                height: 1.5,
-                              ),
-                              textAlign: .start,
-                            );
-                          }(),
-                      ];
-                    },
+                    borderData: FlBorderData(show: false),
+                    lineTouchData: _toolTip(tooltipLabels, gainLists),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  AxisTitles _leftTitles() {
+    return AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 36,
+        getTitlesWidget: (value, meta) {
+          if (value == meta.max || value == meta.min) {
+            return const SizedBox.shrink();
+          }
+          return Text(
+            '${value.toStringAsFixed(0)}h',
+            style: const TextStyle(fontSize: 10),
+          );
+        },
+      ),
+    );
+  }
+
+  AxisTitles _bottomTitles(_ChartData data, double width) {
+    var isSingleMonth =
+        data.businessDays.map((x) => x.month).toSet().length == 1;
+    return AxisTitles(
+      sideTitles: SideTitles(
+        showTitles: true,
+        reservedSize: 28,
+        interval: _labelInterval(width),
+        getTitlesWidget: (value, meta) {
+          final i = value.toInt();
+          if (i < 0 || i >= data.businessDays.length) {
+            return const SizedBox.shrink();
+          }
+          final date = data.businessDays[i];
+          var day = date.day.toString().padLeft(2, '0');
+          var text = isSingleMonth
+              ? day
+              : '$day/${date.month.toString().padLeft(2, '0')}';
+          return Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(text, style: const TextStyle(fontSize: 10)),
+          );
+        },
+      ),
+    );
+  }
+
+  LineTouchData _toolTip(
+    List<String> tooltipLabels,
+    List<List<double>> gainLists,
+  ) {
+    return LineTouchData(
+      touchTooltipData: LineTouchTooltipData(
+        getTooltipColor: (_) => Colors.blueGrey.shade700,
+        maxContentWidth: 200,
+        fitInsideHorizontally: true,
+        getTooltipItems: (spots) {
+          return [
+            for (final spot in spots)
+              () {
+                final label = tooltipLabels[spot.barIndex];
+                final hours = spot.y.toStringAsFixed(1);
+                final dayIndex = spot.x.toInt();
+                final gains = gainLists[spot.barIndex];
+                final gainSuffix = dayIndex < gains.length
+                    ? ' (\$${gains[dayIndex].toStringAsFixed(0)})'
+                    : '';
+                return LineTooltipItem(
+                  '$label: ${hours}h$gainSuffix',
+                  const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    height: 1.5,
+                  ),
+                  textAlign: .start,
+                );
+              }(),
+          ];
+        },
       ),
     );
   }
@@ -203,8 +226,11 @@ class CumulativeHoursChart extends ConsumerWidget {
     );
   }
 
-  double _labelInterval(int count) {
-    return 1;
+  double _labelInterval(double width) {
+    return switch (width) {
+      < 600 => 2,
+      _ => 1,
+    };
     // if (count <= 10) return 1;
     // if (count <= 25) return 5;
     // return 10;
