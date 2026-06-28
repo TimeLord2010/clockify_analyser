@@ -1,8 +1,8 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/services/logger.dart';
-import 'package:clockify/ui/components/pages/timer_page/suggestion_chip.dart';
-import 'package:clockify/ui/components/pages/timer_page/timer_display.dart';
+import 'package:clockify/ui/components/pages/timer_page/timer/suggestion_chip.dart';
+import 'package:clockify/ui/components/pages/timer_page/timer/timer_display.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/running_timer_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';

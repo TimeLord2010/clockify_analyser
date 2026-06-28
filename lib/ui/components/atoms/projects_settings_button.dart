@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../organisms/projects_settings.dart';
+import '../pages/project_settings/projects_settings.dart';
 
 class ProjectsSettingsButton extends StatelessWidget {
   const ProjectsSettingsButton({super.key});

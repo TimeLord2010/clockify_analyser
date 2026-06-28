@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
-import '../../../../features/usecases/string/hex_to_color.dart';
+import '../../../../../features/usecases/string/hex_to_color.dart';
 
 class SuggestionChip extends StatelessWidget {
   const SuggestionChip({
