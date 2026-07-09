@@ -675,7 +675,7 @@ packages:
       path: "../vit_clockify_sdk"
       relative: true
     source: path
-    version: "1.2.0"
+    version: "1.2.1"
   vit_dart_extensions:
     dependency: "direct main"
     description:

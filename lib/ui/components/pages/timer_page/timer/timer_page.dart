@@ -207,7 +207,7 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final projectEntry in topProjects) ...[
-          _buildProjectRow(projectEntry.key, projectEntry.value, projects),
+          _buildProjectRow(projectEntry.key, projectEntry.value, projects, entries),
           Gap(20),
         ],
       ],
@@ -218,14 +218,48 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     String projectId,
     Map<String, int> descriptions,
     List<Project> projects,
+    List<TimeEntry> entries,
   ) {
     final project = projects.where((p) => p.id == projectId).firstOrNull;
     if (project == null) return SizedBox.shrink();
 
-    // Sort descriptions by frequency and take top 3
-    final sortedDescriptions = descriptions.entries.toList()
+    // Get entries for this project
+    final projectEntries = entries
+        .where((entry) => entry.projectId == projectId && entry.description.isNotEmpty)
+        .toList();
+
+    // Top 3 by frequency (volume of hours)
+    final sortedByFrequency = descriptions.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final topDescriptions = sortedDescriptions.take(3).toList();
+    final topByFrequency = sortedByFrequency.take(3).toList();
+
+    // Top 4 by recency (to compensate for potential duplicates)
+    final sortedByRecency = projectEntries
+      ..sort((a, b) {
+        final aEnd = a.timeInterval.end;
+        final bEnd = b.timeInterval.end;
+        if (aEnd == null || bEnd == null) return 0;
+        return bEnd.compareTo(aEnd);
+      });
+    final topByRecency = sortedByRecency
+        .map((e) => e.description)
+        .toSet()
+        .toList()
+        .take(4)
+        .toList();
+
+    // Merge: first recency (top 3), then frequency (removing duplicates)
+    final mergedDescriptions = <String>[];
+
+    // Add top 3 recent
+    mergedDescriptions.addAll(topByRecency.take(3));
+
+    // Add top frequency that aren't already in the list
+    for (final entry in topByFrequency) {
+      if (!mergedDescriptions.contains(entry.key) && mergedDescriptions.length < 6) {
+        mergedDescriptions.add(entry.key);
+      }
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,13 +273,13 @@ class _TimerPageState extends ConsumerState<TimerPage> {
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final description in topDescriptions)
+            for (final description in mergedDescriptions)
               SuggestionChip(
-                description: description.key,
+                description: description,
                 onPressed: () {
                   setState(() {
                     selectedProject = project;
-                    descriptionController.text = description.key;
+                    descriptionController.text = description;
                   });
                 },
                 project: project,
