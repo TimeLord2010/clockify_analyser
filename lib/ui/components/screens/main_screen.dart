@@ -1,6 +1,7 @@
 import 'package:clockify/ui/components/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gap/gap.dart';
 
 import '../../providers/api_key_provider.dart';
 
@@ -12,12 +13,10 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-  final controller = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     final apiKey = ref.watch(apiKeyProvider);
-    final isApiSet = apiKey.isNotEmpty;
+    bool isApiSet = apiKey.isNotEmpty;
 
     return Scaffold(
       body: switch (isApiSet) {
@@ -32,27 +31,27 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       child: Padding(
         padding: const EdgeInsets.all(32.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: .center,
           children: [
             Icon(
               Icons.analytics_outlined,
               size: 80,
               color: Theme.of(context).primaryColor,
             ),
-            SizedBox(height: 24),
+            Gap(24),
             Text(
               'Clockify Analyser',
               style: Theme.of(
                 context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              ).textTheme.headlineMedium?.copyWith(fontWeight: .bold),
             ),
-            SizedBox(height: 16),
+            Gap(16),
             Text(
               'Uma aplicação web que fornece insights abrangentes sobre suas entradas de tempo do Clockify tanto do ponto de vista temporal quanto financeiro.',
-              textAlign: TextAlign.center,
+              textAlign: .center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
-            SizedBox(height: 24),
+            Gap(24),
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -60,13 +59,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   Text(
                     'Para começar:',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontWeight: .bold),
                   ),
                   SizedBox(height: 8),
                   Text('1. Acesse as configurações da sua conta Clockify'),
@@ -76,7 +75,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 32),
+            Gap(32),
             _apiKeyField(),
           ],
         ),

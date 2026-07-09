@@ -1,6 +1,7 @@
 import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
 import 'package:clockify/ui/components/molecules/workspace/icon_workspace_picker.dart';
 import 'package:clockify/ui/components/molecules/workspace/workspace_picker.dart';
+import 'package:clockify/ui/components/pages/tasks_page/tasks_page.dart';
 import 'package:clockify/ui/components/pages/timer_page/timer/timer_page.dart';
 import 'package:clockify/ui/components/pages/workspace_summary/workspace_summary.dart';
 import 'package:clockify/ui/protocols/remove_api_key.dart';
@@ -65,41 +66,42 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
       builder: (context, constraints) {
         var isNarrow = constraints.maxWidth < 600;
         if (isNarrow) {
-          return Scaffold(
-            bottomNavigationBar: BottomAppBar(
-              padding: EdgeInsets.zero,
-              height: 56,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: .spaceAround,
-                      children: [
-                        _bottomNavItem(
-                          Icons.timelapse_rounded,
-                          'Temporizador',
-                          0,
-                        ),
-                        _bottomNavItem(Icons.bar_chart_rounded, 'Relatório', 1),
-                      ],
-                    ),
-                  ),
-                  Gap(5),
-                  IconWorkspacePicker(),
-                  Gap(5),
-                  ProjectsSettingsButton(),
-                ],
-              ),
-            ),
-            body: _activeContent(selectedWorkspace),
-          );
+          return _narrowContent(selectedWorkspace);
         }
-        return _wideLayout(selectedWorkspace);
+        return _wideContent(selectedWorkspace);
       },
     );
   }
 
-  Row _wideLayout(Workspace selectedWorkspace) {
+  Scaffold _narrowContent(Workspace selectedWorkspace) {
+    return Scaffold(
+      bottomNavigationBar: BottomAppBar(
+        padding: EdgeInsets.zero,
+        height: 56,
+        child: Row(
+          children: [
+            Expanded(
+              child: Row(
+                mainAxisAlignment: .spaceAround,
+                children: [
+                  _bottomNavItem(Icons.timelapse_rounded, 'Temporizador', 0),
+                  _bottomNavItem(Icons.bar_chart_rounded, 'Relatório', 1),
+                  _bottomNavItem(Icons.task_alt_rounded, 'Tarefas', 2),
+                ],
+              ),
+            ),
+            Gap(5),
+            IconWorkspacePicker(),
+            Gap(5),
+            ProjectsSettingsButton(),
+          ],
+        ),
+      ),
+      body: _activeContent(selectedWorkspace),
+    );
+  }
+
+  Row _wideContent(Workspace selectedWorkspace) {
     return Row(
       children: [
         NavigationRail(
@@ -117,6 +119,10 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             NavigationRailDestination(
               icon: Icon(Icons.bar_chart_rounded),
               label: Text('Relatório'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.task_alt_rounded),
+              label: Text('Tarefas'),
             ),
           ],
           trailing: Column(
@@ -153,6 +159,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     return switch (selectedPage) {
       0 => TimerPage(),
       1 => WorkspaceSummary(key: ValueKey(selectedWorkspace.id)),
+      2 => TasksPage(),
       _ => Placeholder(),
     };
   }

@@ -20,7 +20,8 @@ dependencies:
   logger: ^2.6.1
   shared_preferences: ^2.5.3
   vit_dart_extensions: ^3.0.1
-  vit_clockify_sdk: ^1.1.0
+  vit_clockify_sdk:
+    path: ../vit_clockify_sdk
 
 dev_dependencies:
   flutter_test:
