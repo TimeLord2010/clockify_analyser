@@ -2,6 +2,7 @@ import 'package:clockify/ui/components/atoms/projects_settings_button.dart';
 import 'package:clockify/ui/components/molecules/workspace/icon_workspace_picker.dart';
 import 'package:clockify/ui/components/molecules/workspace/workspace_picker.dart';
 import 'package:clockify/ui/components/pages/tasks_page/tasks_page.dart';
+import 'package:clockify/ui/components/pages/time_entries_page/time_entries_page.dart';
 import 'package:clockify/ui/components/pages/timer_page/timer/timer_page.dart';
 import 'package:clockify/ui/components/pages/workspace_summary/workspace_summary.dart';
 import 'package:clockify/ui/protocols/remove_api_key.dart';
@@ -86,7 +87,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   _bottomNavItem(Icons.timelapse_rounded, 'Temporizador', 0),
                   _bottomNavItem(Icons.bar_chart_rounded, 'Relatório', 1),
-                  _bottomNavItem(Icons.task_alt_rounded, 'Tarefas', 2),
+                  _bottomNavItem(Icons.list_rounded, 'Registros', 2),
+                  _bottomNavItem(Icons.task_alt_rounded, 'Tarefas', 3),
                 ],
               ),
             ),
@@ -119,6 +121,10 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
             NavigationRailDestination(
               icon: Icon(Icons.bar_chart_rounded),
               label: Text('Relatório'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.list_rounded),
+              label: Text('Registros'),
             ),
             NavigationRailDestination(
               icon: Icon(Icons.task_alt_rounded),
@@ -159,7 +165,8 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
     return switch (selectedPage) {
       0 => TimerPage(),
       1 => WorkspaceSummary(key: ValueKey(selectedWorkspace.id)),
-      2 => TasksPage(),
+      2 => TimeEntriesPage(),
+      3 => TasksPage(),
       _ => Placeholder(),
     };
   }
