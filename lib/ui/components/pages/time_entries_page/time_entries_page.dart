@@ -1,5 +1,6 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
+import 'package:clockify/ui/components/pages/time_entries_page/time_entry_date_picker_dialog.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
@@ -100,8 +101,26 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
           entry: entry,
           membership: getMembership(),
           project: project,
+          onDateClick: () {
+            _onTimeEntryDateClicked(entry);
+          },
         );
       },
+    );
+  }
+
+  // MARK: Events
+
+  void _onTimeEntryDateClicked(TimeEntry entry) {
+    showDialog(
+      context: context,
+      builder: (context) => TimeEntryDatePickerDialog(
+        entry: entry,
+        onSave: (startDate, endDate) {
+          // TODO: Handle the date update when API is ready
+          debugPrint('Start: $startDate, End: $endDate');
+        },
+      ),
     );
   }
 }

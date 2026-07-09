@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
-class TimeEntryViewer extends StatelessWidget {
+class TimeEntryViewer extends StatefulWidget {
   const TimeEntryViewer({
     super.key,
     required this.entry,
     required this.membership,
     required this.project,
+    this.onDateClick,
   });
 
   final TimeEntry entry;
@@ -19,19 +20,30 @@ class TimeEntryViewer extends StatelessWidget {
   final Membership? membership;
   final Project? project;
 
+  /// Optional callback when the date/time section is clicked.
+  /// If provided, the date/time area becomes interactive with hover feedback.
+  final VoidCallback? onDateClick;
+
+  @override
+  State<TimeEntryViewer> createState() => _TimeEntryViewerState();
+}
+
+class _TimeEntryViewerState extends State<TimeEntryViewer> {
+  bool _isHoveringDate = false;
+
   @override
   Widget build(BuildContext context) {
-    Duration duration = entry.timeInterval.duration ?? Duration.zero;
+    Duration duration = widget.entry.timeInterval.duration ?? Duration.zero;
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
 
     var gainManager = TimeEntryGainManager(
-      entry: entry,
-      membership: membership,
+      entry: widget.entry,
+      membership: widget.membership,
       customHourlyRate: null,
     );
 
-    String? projectColor = project?.color;
+    String? projectColor = widget.project?.color;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -43,10 +55,10 @@ class TimeEntryViewer extends StatelessWidget {
             // Project info row
             Row(
               children: [
-                if (project != null) ...[
+                if (widget.project != null) ...[
                   Expanded(
                     child: Text(
-                      project?.name ?? '',
+                      widget.project?.name ?? '',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
@@ -98,9 +110,9 @@ class TimeEntryViewer extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Description
-            if (entry.description.isNotEmpty) ...[
+            if (widget.entry.description.isNotEmpty) ...[
               Text(
-                entry.description,
+                widget.entry.description,
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
               ),
               const SizedBox(height: 12),
@@ -109,42 +121,77 @@ class TimeEntryViewer extends StatelessWidget {
             // Time interval and rate info
             Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                MouseRegion(
+                  cursor: widget.onDateClick != null
+                      ? SystemMouseCursors.click
+                      : MouseCursor.defer,
+                  onEnter: widget.onDateClick != null
+                      ? (_) => setState(() => _isHoveringDate = true)
+                      : null,
+                  onExit: widget.onDateClick != null
+                      ? (_) => setState(() => _isHoveringDate = false)
+                      : null,
+                  child: GestureDetector(
+                    onTap: widget.onDateClick,
+                    child: Container(
+                      padding: widget.onDateClick != null
+                          ? const EdgeInsets.all(8)
+                          : null,
+                      decoration: widget.onDateClick != null
+                          ? BoxDecoration(
+                              color: _isHoveringDate
+                                  ? Colors.grey.shade100
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: _isHoveringDate
+                                    ? Colors.grey.shade300
+                                    : Colors.transparent,
+                                width: 1,
+                              ),
+                            )
+                          : null,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.access_time,
-                            size: 16,
-                            color: Colors.grey,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.access_time,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 4),
+                              _timeInterval(),
+                            ],
                           ),
-                          const SizedBox(width: 4),
-                          _timeInterval(),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                widget.entry.timeInterval.start
+                                    .formatAsReadable(false),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            entry.timeInterval.start.formatAsReadable(false),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
+                const Spacer(),
                 // Total gain
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -184,7 +231,7 @@ class TimeEntryViewer extends StatelessWidget {
   }
 
   Text _timeInterval() {
-    var timeInterval = entry.timeInterval;
+    var timeInterval = widget.entry.timeInterval;
     var end = timeInterval.end;
     return Text(
       '${formatTime(timeInterval.start)} - ${end != null ? formatTime(end) : 'Agora'}',
