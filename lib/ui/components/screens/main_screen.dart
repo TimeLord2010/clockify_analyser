@@ -1,5 +1,6 @@
 import 'package:clockify/ui/components/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -20,6 +21,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   /// Sem isso, o Flutter pode fechar a conexão de entrada de texto
   /// ([TextInputConnection]) se o controller for recriado.
   final _apiKeyController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _apiKeyController.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -98,20 +107,47 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Widget _apiKeyField() {
+    final hasText = _apiKeyController.text.isNotEmpty;
+
     return Center(
-      child: SizedBox(
-        width: 300,
-        child: TextField(
-          controller: _apiKeyController,
-          onSubmitted: (value) {
-            ref.read(apiKeyProvider.notifier).setApiKey(value);
-          },
-          decoration: InputDecoration(
-            labelText: 'Chave da API',
-            focusedBorder: OutlineInputBorder(),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 300,
+            child: TextField(
+              controller: _apiKeyController,
+              onSubmitted: _submitApiKey,
+              decoration: InputDecoration(
+                labelText: 'Chave da API',
+                focusedBorder: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.paste),
+                  tooltip: 'Colar da área de transferência',
+                  onPressed: _pasteFromClipboard,
+                ),
+              ),
+            ),
           ),
-        ),
+          Gap(8),
+          IconButton(
+            icon: Icon(Icons.arrow_forward),
+            tooltip: 'Salvar chave',
+            onPressed: hasText ? () => _submitApiKey(_apiKeyController.text) : null,
+          ),
+        ],
       ),
     );
+  }
+
+  void _submitApiKey(String value) {
+    ref.read(apiKeyProvider.notifier).setApiKey(value);
+  }
+
+  void _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null) {
+      _apiKeyController.text = data!.text!;
+    }
   }
 }
