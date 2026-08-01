@@ -188,13 +188,15 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
 
     projects.sortByString((x) => x.name);
 
-    return Wrap(
-      spacing: 20,
-      runSpacing: 20,
-      children: [
-        for (var project in projects)
-          _projectSection(project: project, userId: selectedUser.id),
-      ],
+    return SingleChildScrollView(
+      child: Wrap(
+        spacing: 20,
+        runSpacing: 20,
+        children: [
+          for (var project in projects)
+            _projectSection(project: project, userId: selectedUser.id),
+        ],
+      ),
     );
   }
 
