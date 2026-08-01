@@ -13,6 +13,20 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
+  /// Mantém uma referência estável ao [TextEditingController] durante
+  /// todo o ciclo de vida do estado, garantindo que o [EditableText]
+  /// enxergue sempre a mesma instância do controller mesmo quando a
+  /// árvore de widgets é reconstruída (ex: ao abrir o teclado).
+  /// Sem isso, o Flutter pode fechar a conexão de entrada de texto
+  /// ([TextInputConnection]) se o controller for recriado.
+  final _apiKeyController = TextEditingController();
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final apiKey = ref.watch(apiKeyProvider);
@@ -88,6 +102,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       child: SizedBox(
         width: 300,
         child: TextField(
+          controller: _apiKeyController,
           onSubmitted: (value) {
             ref.read(apiKeyProvider.notifier).setApiKey(value);
           },
