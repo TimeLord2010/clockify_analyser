@@ -1,4 +1,5 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
+import 'package:clockify/features/usecases/date/get_short_month.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
 import 'package:clockify/ui/components/pages/time_entries_page/time_entry_date_picker_dialog.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
@@ -48,18 +49,68 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
     User? selectedUser,
   ) {
     final now = DateTime.now();
-    final threeDaysAgo = now.subtract(Duration(days: 3));
+    final today = DateTime(now.year, now.month, now.day);
+    final days = [
+      today,
+      today.subtract(const Duration(days: 1)),
+      today.subtract(const Duration(days: 2)),
+    ];
 
-    // Filter entries from the past 3 days and sort from most recent to oldest
-    final recentEntries =
-        entries
-            .where((entry) => entry.timeInterval.start.isAfter(threeDaysAgo))
-            .toList()
-          ..sort(
-            (a, b) => b.timeInterval.start.compareTo(a.timeInterval.start),
-          );
+    return DefaultTabController(
+      length: days.length,
+      child: Column(
+        children: [
+          TabBar(
+            tabs: [
+              for (final day in days) Tab(text: _tabLabel(day, today)),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                for (final day in days)
+                  _buildDayEntries(
+                    _entriesForDay(entries, day),
+                    projects,
+                    selectedUser,
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    if (recentEntries.isEmpty) {
+  List<TimeEntry> _entriesForDay(List<TimeEntry> entries, DateTime day) {
+    return entries
+        .where((entry) {
+          final start = entry.timeInterval.start;
+          return start.year == day.year &&
+              start.month == day.month &&
+              start.day == day.day;
+        })
+        .toList()
+      ..sort(
+        (a, b) => b.timeInterval.start.compareTo(a.timeInterval.start),
+      );
+  }
+
+  String _tabLabel(DateTime day, DateTime today) {
+    final difference = today.difference(day).inDays;
+    return switch (difference) {
+      0 => 'Hoje',
+      1 => 'Ontem',
+      _ => '${day.day} ${getShortMonth(day.month)}',
+    };
+  }
+
+  Widget _buildDayEntries(
+    List<TimeEntry> entries,
+    List<Project> projects,
+    User? selectedUser,
+  ) {
+    if (entries.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -67,7 +118,7 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
             const Icon(Icons.access_time, size: 48, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'Nenhuma entrada de tempo nos últimos 3 dias',
+              'Nenhuma entrada neste dia',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(color: Colors.grey),
@@ -78,9 +129,9 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
     }
 
     return ListView.builder(
-      itemCount: recentEntries.length,
+      itemCount: entries.length,
       itemBuilder: (context, index) {
-        final entry = recentEntries[index];
+        final entry = entries[index];
         final project = projects.firstWhereOrNull(
           (p) => p.id == entry.projectId,
         );
