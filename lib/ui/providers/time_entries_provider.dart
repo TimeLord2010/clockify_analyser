@@ -140,6 +140,60 @@ final last7DaysDateRangeProvider =
       return (startDate: startDate, endDate: endDate);
     });
 
+// Provider holding time entries from recently stopped timers.
+// Inserted manually without re-fetching, avoiding unnecessary API calls.
+class RecentlyStoppedEntriesNotifier extends StateNotifier<List<TimeEntry>> {
+  RecentlyStoppedEntriesNotifier() : super([]);
+
+  void addEntry(TimeEntry entry) {
+    final existingIndex = state.indexWhere((e) => e.id == entry.id);
+    if (existingIndex >= 0) {
+      final updated = [...state];
+      updated[existingIndex] = entry;
+      state = updated;
+    } else {
+      state = [entry, ...state];
+    }
+  }
+}
+
+final recentlyStoppedEntriesProvider =
+    StateNotifierProvider<RecentlyStoppedEntriesNotifier, List<TimeEntry>>(
+  (ref) => RecentlyStoppedEntriesNotifier(),
+);
+
+List<TimeEntry> _mergeEntries(
+  List<TimeEntry> recent,
+  List<TimeEntry> existing,
+) {
+  final recentIds = recent.map((e) => e.id).toSet();
+  return [...recent, ...existing.where((e) => !recentIds.contains(e.id))];
+}
+
+final mergedTimeEntriesForWorkspaceProvider =
+    Provider<AsyncValue<List<TimeEntry>>>((ref) {
+  final fetched = ref.watch(timeEntriesForWorkspaceProvider);
+  final recent = ref.watch(recentlyStoppedEntriesProvider);
+  return fetched.when(
+    data: (entries) => AsyncValue.data(_mergeEntries(recent, entries)),
+    loading: () =>
+        recent.isNotEmpty ? AsyncValue.data(recent) : const AsyncValue.loading(),
+    error: (e, s) => AsyncValue.error(e, s),
+  );
+});
+
+final mergedTimeEntriesLast7DaysProvider =
+    Provider<AsyncValue<List<TimeEntry>>>((ref) {
+  final fetched = ref.watch(timeEntriesLast7DaysProvider);
+  final recent = ref.watch(recentlyStoppedEntriesProvider);
+  return fetched.when(
+    data: (entries) => AsyncValue.data(_mergeEntries(recent, entries)),
+    loading: () =>
+        recent.isNotEmpty ? AsyncValue.data(recent) : const AsyncValue.loading(),
+    error: (e, s) => AsyncValue.error(e, s),
+  );
+});
+
 // Provider for time entries from the last 7 days
 final timeEntriesLast7DaysProvider = FutureProvider<List<TimeEntry>>((
   ref,

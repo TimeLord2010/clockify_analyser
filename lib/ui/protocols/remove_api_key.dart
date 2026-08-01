@@ -25,6 +25,7 @@ void removeApiKey(
   ref.invalidate(usersProvider);
   ref.invalidate(projectsProvider);
   ref.invalidate(timeEntriesForWorkspaceProvider);
+  ref.invalidate(recentlyStoppedEntriesProvider);
 
   // Navigate back or show a message
   var mounted = isMounted?.call() ?? true;

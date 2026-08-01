@@ -18,7 +18,7 @@ class GroupedEntriesChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
+    final entriesAsync = ref.watch(mergedTimeEntriesForWorkspaceProvider);
 
     return entriesAsync.when(
       data: (entries) => _buildChart(context, ref, entries),

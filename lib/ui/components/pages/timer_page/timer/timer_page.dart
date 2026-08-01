@@ -71,8 +71,16 @@ class _TimerPageState extends ConsumerState<TimerPage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(runningTimerProvider, (previous, next) {
+      if (next.hasRunningTimer &&
+          next.entry!.description.isNotEmpty &&
+          descriptionController.text.isEmpty) {
+        descriptionController.text = next.entry!.description;
+      }
+    });
+
     final projects = ref.watch(projectsProvider);
-    final entriesAsync = ref.watch(timeEntriesLast7DaysProvider);
+    final entriesAsync = ref.watch(mergedTimeEntriesLast7DaysProvider);
     final runningTimerState = ref.watch(runningTimerProvider);
 
     // Fetch entries from the last 7 days

@@ -28,7 +28,7 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
   @override
   Widget build(BuildContext context) {
     var projects = ref.watch(projectsProvider);
-    var entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
+    var entriesAsync = ref.watch(mergedTimeEntriesForWorkspaceProvider);
     var selectedUser = ref.watch(selectedUserProvider);
     var projectMap = <String, Project>{
       for (var item in projects) item.id: item,

@@ -3,6 +3,7 @@ import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
 import 'package:clockify/ui/components/pages/time_entries_page/time_entry_date_picker_dialog.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
+import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,7 +20,7 @@ class TimeEntriesPage extends ConsumerStatefulWidget {
 class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
   @override
   Widget build(BuildContext context) {
-    final entriesAsync = ref.watch(timeEntriesForWorkspaceProvider);
+    final entriesAsync = ref.watch(mergedTimeEntriesForWorkspaceProvider);
     final projects = ref.watch(projectsProvider);
     final selectedUser = ref.watch(selectedUserProvider);
 
@@ -116,9 +117,21 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
       context: context,
       builder: (context) => TimeEntryDatePickerDialog(
         entry: entry,
-        onSave: (startDate, endDate) {
-          // TODO: Handle the date update when API is ready
-          debugPrint('Start: $startDate, End: $endDate');
+        onSave: (startDate, endDate) async {
+          final workspace = ref.read(selectedWorkspaceProvider).valueOrNull;
+          if (workspace == null) return;
+
+          await VitClockify.timeEntries.update(
+            workspaceId: workspace.id,
+            entryId: entry.id,
+            start: startDate,
+            end: endDate,
+            projectId: entry.projectId,
+          );
+
+          entry.timeInterval.start = startDate;
+          entry.timeInterval.end = endDate;
+          setState(() {});
         },
       ),
     );

@@ -128,7 +128,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
         throw Exception('Workspace or user not selected');
       }
 
-      await VitClockify.timeEntries.stopTimer(
+      final stoppedEntry = await VitClockify.timeEntries.stopTimer(
         workspaceId: workspace.id,
         userId: user.id,
       );
@@ -136,8 +136,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
       state = const RunningTimerState();
       _logger.i('Timer stopped: ${currentEntry.id}');
 
-      // Invalidate time entries to refresh the list
-      ref.invalidate(timeEntriesLast7DaysProvider);
+      ref.read(recentlyStoppedEntriesProvider.notifier).addEntry(stoppedEntry);
     } catch (e, stack) {
       _logger.e('Error stopping timer', error: e, stackTrace: stack);
       state = state.copyWith(error: e.toString());
