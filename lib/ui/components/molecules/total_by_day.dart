@@ -5,6 +5,7 @@ import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
 import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
@@ -84,8 +85,8 @@ class TotalByDay extends StatelessWidget {
             return totals.values.fold(0.0, (prev, gain) => prev + gain);
           })
           .reduce(max),
-      if (minGain != null) minGain,
-      if (targetGain != null) targetGain,
+      ?minGain,
+      ?targetGain,
     ].reduce(max);
 
     var monthsInEntries = {for (var entry in entryDates) entry.month};
@@ -94,8 +95,8 @@ class TotalByDay extends StatelessWidget {
     return SizedBox(
       height: height,
       child: ListView.builder(
+        scrollCacheExtent: ScrollCacheExtent.pixels(2000),
         scrollDirection: Axis.horizontal,
-        cacheExtent: 2000,
         padding: EdgeInsets.only(bottom: 5),
         itemBuilder: (context, index) {
           var dt = allDates.elementAt(index);
