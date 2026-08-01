@@ -215,7 +215,12 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final projectEntry in topProjects) ...[
-          _buildProjectRow(projectEntry.key, projectEntry.value, projects, entries),
+          _buildProjectRow(
+            projectEntry.key,
+            projectEntry.value,
+            projects,
+            entries,
+          ),
           Gap(20),
         ],
       ],
@@ -233,7 +238,10 @@ class _TimerPageState extends ConsumerState<TimerPage> {
 
     // Get entries for this project
     final projectEntries = entries
-        .where((entry) => entry.projectId == projectId && entry.description.isNotEmpty)
+        .where(
+          (entry) =>
+              entry.projectId == projectId && entry.description.isNotEmpty,
+        )
         .toList();
 
     // Top 3 by frequency (volume of hours)
@@ -264,7 +272,8 @@ class _TimerPageState extends ConsumerState<TimerPage> {
 
     // Add top frequency that aren't already in the list
     for (final entry in topByFrequency) {
-      if (!mergedDescriptions.contains(entry.key) && mergedDescriptions.length < 6) {
+      if (!mergedDescriptions.contains(entry.key) &&
+          mergedDescriptions.length < 6) {
         mergedDescriptions.add(entry.key);
       }
     }
