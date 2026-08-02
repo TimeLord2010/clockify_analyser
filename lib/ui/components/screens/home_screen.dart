@@ -85,7 +85,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
               child: Row(
                 mainAxisAlignment: .spaceAround,
                 children: [
-                  _bottomNavItem(Icons.timelapse_rounded, 'Temporizador', 0),
+                  _bottomNavItem(Icons.timelapse_rounded, 'Timer', 0),
                   _bottomNavItem(Icons.bar_chart_rounded, 'Relatório', 1),
                   _bottomNavItem(Icons.list_rounded, 'Registros', 2),
                   _bottomNavItem(Icons.task_alt_rounded, 'Tarefas', 3),
@@ -116,7 +116,7 @@ class HomeScreenState extends ConsumerState<HomeScreen> {
           destinations: [
             NavigationRailDestination(
               icon: Icon(Icons.timelapse_rounded),
-              label: Text('Temporizador'),
+              label: Text('Timer'),
             ),
             NavigationRailDestination(
               icon: Icon(Icons.bar_chart_rounded),

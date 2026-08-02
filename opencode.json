@@ -3,6 +3,8 @@
   "permission": {
     "bash": {
       "*": "ask",
+      "ls*": "allow",
+      "find*": "allow",
       "flutter analyze*": "allow"
     }
   }
