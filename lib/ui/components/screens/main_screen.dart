@@ -80,8 +80,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Widget _apiKeyField() {
-    final hasText = _apiKeyController.text.isNotEmpty;
-
     return Center(
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -103,12 +101,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
           ),
           Gap(8),
-          IconButton(
-            icon: Icon(Icons.arrow_forward),
-            tooltip: 'Salvar chave',
-            onPressed: hasText
-                ? () => _submitApiKey(_apiKeyController.text)
-                : null,
+          ListenableBuilder(
+            listenable: _apiKeyController,
+            builder: (context, child) {
+              final hasText = _apiKeyController.text.isNotEmpty;
+              return IconButton(
+                icon: Icon(Icons.arrow_forward),
+                tooltip: 'Salvar chave',
+                onPressed: hasText
+                    ? () => _submitApiKey(_apiKeyController.text)
+                    : null,
+              );
+            },
           ),
         ],
       ),
