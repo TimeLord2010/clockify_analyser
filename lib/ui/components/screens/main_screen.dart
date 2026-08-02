@@ -56,11 +56,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         child: Column(
           mainAxisAlignment: .center,
           children: [
-            Icon(
-              Icons.analytics_outlined,
-              size: 80,
-              color: Theme.of(context).primaryColor,
-            ),
             Gap(24),
             Text(
               'Clockify Analyser',
@@ -72,33 +67,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             Text(
               'Uma aplicação web que fornece insights abrangentes sobre suas entradas de tempo do Clockify tanto do ponto de vista temporal quanto financeiro.',
               textAlign: .center,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.merge(TextStyle(fontSize: 13)),
             ),
-            Gap(24),
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: .start,
-                children: [
-                  Text(
-                    'Para começar:',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontWeight: .bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text('1. Acesse as configurações da sua conta Clockify'),
-                  Text('2. Gere uma nova chave de API'),
-                  Text('3. Insira a chave no campo abaixo'),
-                  Text('4. Pressione Enter para salvar'),
-                ],
-              ),
-            ),
-            Gap(32),
+            Gap(20),
             _apiKeyField(),
           ],
         ),
@@ -133,7 +106,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           IconButton(
             icon: Icon(Icons.arrow_forward),
             tooltip: 'Salvar chave',
-            onPressed: hasText ? () => _submitApiKey(_apiKeyController.text) : null,
+            onPressed: hasText
+                ? () => _submitApiKey(_apiKeyController.text)
+                : null,
           ),
         ],
       ),
