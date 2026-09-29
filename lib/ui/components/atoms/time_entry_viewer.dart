@@ -12,6 +12,7 @@ class TimeEntryViewer extends StatefulWidget {
     required this.membership,
     required this.project,
     this.onDateClick,
+    this.onDescriptionClick,
   });
 
   final TimeEntry entry;
@@ -24,12 +25,17 @@ class TimeEntryViewer extends StatefulWidget {
   /// If provided, the date/time area becomes interactive with hover feedback.
   final VoidCallback? onDateClick;
 
+  /// Optional callback when the description is clicked.
+  /// If provided, the description is shown even when empty so it can be set.
+  final VoidCallback? onDescriptionClick;
+
   @override
   State<TimeEntryViewer> createState() => _TimeEntryViewerState();
 }
 
 class _TimeEntryViewerState extends State<TimeEntryViewer> {
   bool _isHoveringDate = false;
+  bool _isHoveringDescription = false;
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +116,10 @@ class _TimeEntryViewerState extends State<TimeEntryViewer> {
             const SizedBox(height: 12),
 
             // Description
-            if (widget.entry.description.isNotEmpty) ...[
+            if (widget.onDescriptionClick != null) ...[
+              _editableDescription(),
+              const SizedBox(height: 12),
+            ] else if (widget.entry.description.isNotEmpty) ...[
               Text(
                 widget.entry.description,
                 style: const TextStyle(fontSize: 14, color: Colors.black87),
@@ -225,6 +234,44 @@ class _TimeEntryViewerState extends State<TimeEntryViewer> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editableDescription() {
+    final description = widget.entry.description;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHoveringDescription = true),
+      onExit: (_) => setState(() => _isHoveringDescription = false),
+      child: GestureDetector(
+        onTap: widget.onDescriptionClick,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _isHoveringDescription
+                ? Colors.grey.shade100
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isHoveringDescription
+                  ? Colors.grey.shade300
+                  : Colors.transparent,
+              width: 1,
+            ),
+          ),
+          child: Text(
+            description.isNotEmpty ? description : 'Sem descrição',
+            style: TextStyle(
+              fontSize: 14,
+              color: description.isNotEmpty ? Colors.black87 : Colors.grey,
+              fontStyle: description.isNotEmpty
+                  ? FontStyle.normal
+                  : FontStyle.italic,
+            ),
+          ),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/date/get_short_month.dart';
 import 'package:clockify/ui/components/atoms/time_entry_viewer.dart';
 import 'package:clockify/ui/components/pages/time_entries_page/time_entry_date_picker_dialog.dart';
+import 'package:clockify/ui/components/pages/time_entries_page/time_entry_description_dialog.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:clockify/ui/providers/selected_workspace_provider.dart';
@@ -156,6 +157,9 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
           onDateClick: () {
             _onTimeEntryDateClicked(entry);
           },
+          onDescriptionClick: () {
+            _onTimeEntryDescriptionClicked(entry);
+          },
         );
       },
     );
@@ -177,12 +181,46 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
             entryId: entry.id,
             start: startDate,
             end: endDate,
+            description: entry.description,
+            taskId: entry.taskId,
             projectId: entry.projectId,
+            billable: entry.billable,
+            tagIds: entry.tagIds,
           );
 
           entry.timeInterval.start = startDate;
           entry.timeInterval.end = endDate;
           setState(() {});
+        },
+      ),
+    );
+  }
+
+  void _onTimeEntryDescriptionClicked(TimeEntry entry) {
+    showDialog(
+      context: context,
+      builder: (context) => TimeEntryDescriptionDialog(
+        entry: entry,
+        onSave: (description) async {
+          final workspace = ref.read(selectedWorkspaceProvider).valueOrNull;
+          if (workspace == null) return;
+
+          try {
+            await VitClockify.timeEntries.updateDescription(
+              workspaceId: workspace.id,
+              entry: entry,
+              description: description,
+            );
+          } on ClockifyException catch (e) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(this.context).showSnackBar(
+              SnackBar(content: Text('Erro ao salvar título: ${e.message}')),
+            );
+            return;
+          }
+
+          entry.description = description;
+          if (mounted) setState(() {});
         },
       ),
     );
