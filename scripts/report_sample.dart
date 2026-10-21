@@ -38,30 +38,32 @@ void main(List<String> args) {
   );
   final manyProjects = args.contains('--many-projects');
 
+  // Colors exactly as the SDK delivers them: no leading '#', sometimes
+  // 8-digit ARGB (as `colorToHex` produces), sometimes 6-digit from Clockify.
   final specs = <_ProjectSpec>[
-    _ProjectSpec('p1', 'LEIA - Plataforma', '#1F6FEB', 120, [
+    _ProjectSpec('p1', 'LEIA - Plataforma', '1F6FEB', 120, [
       _TaskSpec('Refatorar módulo de autenticação', 6, 175),
       _TaskSpec('Revisão de PRs do time', 9, 120),
       _TaskSpec('Migração do banco para Postgres 16', 3, 210),
       _TaskSpec('Ajustes de layout no painel admin', 2, 45),
       _TaskSpec('Correção de bug no upload de anexos', 1, 25),
     ]),
-    _ProjectSpec('p2', 'GRAV - Atendimento', '#10B981', 95, [
+    _ProjectSpec('p2', 'GRAV - Atendimento', 'FF10B981', 95, [
       _TaskSpec('Reunião de alinhamento semanal', 4, 240),
       _TaskSpec('Documentação do fluxo de atendimento', 3, 150),
       _TaskSpec('Treinamento da equipe de suporte', 2, 180),
       _TaskSpec('Ajuste no template do WhatsApp', 1, 30),
     ]),
-    _ProjectSpec('p3', 'Interno - Estudos', '#F59E0B', 0, [
+    _ProjectSpec('p3', 'Interno - Estudos', 'F59E0B', 0, [
       _TaskSpec('Curso de arquitetura de software', 5, 300),
       _TaskSpec('Leitura de documentação do Riverpod', 2, 90),
     ]),
-    _ProjectSpec('p4', 'Cliente VIT - App', '#8B5CF6', 150, [
+    _ProjectSpec('p4', 'Cliente VIT - App', 'FF8B5CF6', 150, [
       _TaskSpec('Implementar tela de cronômetro', 4, 260),
       _TaskSpec('Integração com a API do Clockify', 2, 140),
       _TaskSpec('Ajustes de acessibilidade', 1, 35),
     ]),
-    _ProjectSpec('p5', 'Suporte', '#EF4444', 80, [
+    _ProjectSpec('p5', 'Suporte', 'EF4444', 80, [
       _TaskSpec('Tickets de suporte nível 2', 7, 195),
       _TaskSpec('Plantão de incidentes', 2, 60),
     ]),
@@ -73,7 +75,7 @@ void main(List<String> args) {
         _ProjectSpec(
           'p$i',
           'Projeto extra $i',
-          ['#06B6D4', '#EC4899', '#84CC16', '#6366F1'][i % 4],
+          ['06B6D4', 'FFEC4899', '84CC16', 'FF6366F1'][i % 4],
           100,
           [_TaskSpec('Demanda $i', 1, 30 + i * 5)],
         ),

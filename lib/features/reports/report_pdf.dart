@@ -481,7 +481,9 @@ pw.Widget _otherTasks(ReportData data, PdfColor grey) {
   );
 }
 
-/// Clockify project color, with a deterministic fallback for malformed values.
+/// Clockify project color, parsed the same way the app does (AARRGGBB when
+/// 8 digits, implicit opaque alpha when 6), with a deterministic fallback
+/// palette for missing/malformed values.
 PdfColor _sliceColor(String colorHex, int index) {
   const fallback = [
     0xFF3B82F6,
@@ -496,11 +498,32 @@ PdfColor _sliceColor(String colorHex, int index) {
     0xFFF97316,
   ];
 
-  try {
-    return PdfColor.fromHex(colorHex);
-  } catch (_) {
+  final argb = _parseArgb(colorHex);
+  if (argb == null) {
     return PdfColor.fromInt(fallback[index % fallback.length]);
   }
+
+  return PdfColor(
+    ((argb >> 16) & 0xFF) / 255.0,
+    ((argb >> 8) & 0xFF) / 255.0,
+    (argb & 0xFF) / 255.0,
+  );
+}
+
+/// Parses `RGB`, `RRGGBB` or `AARRGGBB` (with or without `#`) into an ARGB int.
+int? _parseArgb(String value) {
+  var hex = value.trim().replaceFirst('#', '');
+  if (hex.isEmpty) return null;
+
+  if (hex.length == 3) {
+    hex = hex.split('').map((char) => '$char$char').join();
+  }
+  if (hex.length == 6) {
+    hex = 'FF$hex';
+  }
+  if (hex.length != 8) return null;
+
+  return int.tryParse(hex, radix: 16);
 }
 
 String _percent(double share) => '${(share * 100).toStringAsFixed(1)}%';

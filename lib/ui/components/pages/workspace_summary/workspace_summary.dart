@@ -93,7 +93,8 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
       padding: EdgeInsets.symmetric(horizontal: 5),
       height: 68,
       child: Row(
-        spacing: 10,
+        spacing: 16,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(child: TotalGainByProject(gainManager: gainManager)),
           _reportButton(),
@@ -104,35 +105,31 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
 
   /// Generates the PDF report for the period shown on this screen.
   Widget _reportButton() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Keep the label only when the bar has room for it.
-        final compact = MediaQuery.sizeOf(context).width < 520;
-        final icon = _isGeneratingReport
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.picture_as_pdf_outlined, size: 18);
+    // Keep the label only when the bar has room for it.
+    final compact = MediaQuery.sizeOf(context).width < 520;
+    final icon = _isGeneratingReport
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : const Icon(Icons.picture_as_pdf_outlined, size: 18);
 
-        if (compact) {
-          return IconButton.filledTonal(
-            onPressed: _isGeneratingReport ? null : _generateReport,
-            tooltip: 'Gerar relatório em PDF',
-            icon: icon,
-          );
-        }
-
-        return FilledButton.tonalIcon(
-          onPressed: _isGeneratingReport ? null : _generateReport,
-          icon: icon,
-          label: Text(
-            _isGeneratingReport ? 'Gerando…' : 'Relatório PDF',
-            style: const TextStyle(fontSize: 12),
-          ),
-        );
-      },
+    return Center(
+      child: compact
+          ? IconButton.filledTonal(
+              onPressed: _isGeneratingReport ? null : _generateReport,
+              tooltip: 'Gerar relatório em PDF',
+              icon: icon,
+            )
+          : FilledButton.tonalIcon(
+              onPressed: _isGeneratingReport ? null : _generateReport,
+              icon: icon,
+              label: Text(
+                _isGeneratingReport ? 'Gerando…' : 'Relatório PDF',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
     );
   }
 

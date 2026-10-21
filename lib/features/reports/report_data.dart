@@ -245,12 +245,13 @@ String _normalizeDescription(String description) {
   return trimmed.isEmpty ? '(sem descrição)' : trimmed;
 }
 
-/// Clockify colors come as `#RRGGBB`; the PDF parser also accepts `#RGB`, but a
-/// malformed value must not break the whole report.
+/// Clockify colors arrive without the `#` (the SDK strips it) and may be
+/// 6-digit RGB (`0B70D4`) or 8-digit ARGB (`FF0B70D4`). Anything else is left
+/// empty so the PDF falls back to its own palette.
 String _normalizeColorHex(String? color) {
-  final value = (color ?? '').trim();
+  final value = (color ?? '').trim().replaceFirst('#', '');
   final isValid = RegExp(
-    r'^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$',
+    r'^([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$',
   ).hasMatch(value);
-  return isValid ? value : '#9E9E9E';
+  return isValid ? value : '';
 }
