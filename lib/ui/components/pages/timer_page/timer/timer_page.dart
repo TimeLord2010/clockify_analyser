@@ -1,8 +1,10 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/features/usecases/string/hex_to_color.dart';
 import 'package:clockify/services/logger.dart';
+import 'package:clockify/ui/components/pages/project_settings/projects_settings.dart';
 import 'package:clockify/ui/components/pages/timer_page/timer/suggestion_chip.dart';
 import 'package:clockify/ui/components/pages/timer_page/timer/timer_display.dart';
+import 'package:clockify/ui/providers/hidden_projects_provider.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/running_timer_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
@@ -51,7 +53,7 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     return membership?.hourlyRate.amount.toDouble() ?? 0;
   }
 
-  Future<void> _handleStartStop() async {
+  Future<void> _handleStartStop(Project? project) async {
     final runningTimerState = ref.read(runningTimerProvider);
     final runningTimerNotifier = ref.read(runningTimerProvider.notifier);
 
@@ -60,10 +62,10 @@ class _TimerPageState extends ConsumerState<TimerPage> {
       await runningTimerNotifier.stopTimer();
     } else {
       // Start timer
-      if (selectedProject == null) return;
+      if (project == null) return;
 
       await runningTimerNotifier.startTimer(
-        projectId: selectedProject!.id,
+        projectId: project.id,
         description: descriptionController.text,
       );
     }
@@ -80,8 +82,18 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     });
 
     final projects = ref.watch(projectsProvider);
+    final hiddenProjectIds = ref.watch(hiddenProjectIdsProvider);
     final entriesAsync = ref.watch(mergedTimeEntriesLast7DaysProvider);
     final runningTimerState = ref.watch(runningTimerProvider);
+
+    // Projetos ocultados nas configurações não aparecem no seletor nem nas
+    // sugestões, mas continuam disponíveis para exibir um timer em andamento.
+    final visibleProjects = projects
+        .where((project) => !hiddenProjectIds.contains(project.id))
+        .toList();
+    final selectedVisibleProject = visibleProjects
+        .where((project) => project.id == selectedProject?.id)
+        .firstOrNull;
 
     // Fetch entries from the last 7 days
     final relevantTimeEntries = entriesAsync.when(
@@ -120,10 +132,17 @@ class _TimerPageState extends ConsumerState<TimerPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Only show project selector when not running
-              if (!isTimerRunning) _projectList(projects),
+              if (!isTimerRunning)
+                visibleProjects.isEmpty
+                    ? _noVisibleProjectsHint()
+                    : _projectList(visibleProjects, selectedVisibleProject),
               if (!isTimerRunning) const Gap(20),
 
-              _textFieldBar(isTimerRunning, runningTimerState.isLoading),
+              _textFieldBar(
+                isTimerRunning,
+                runningTimerState.isLoading,
+                selectedVisibleProject,
+              ),
               const Gap(20),
 
               // Show either timer display or suggestions
@@ -135,7 +154,7 @@ class _TimerPageState extends ConsumerState<TimerPage> {
                   projectName: runningProject.name,
                 )
               else
-                _buildSuggestions(relevantTimeEntries, projects),
+                _buildSuggestions(relevantTimeEntries, visibleProjects),
 
               // Error display
               if (runningTimerState.error != null) ...[
@@ -152,7 +171,10 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     );
   }
 
-  SingleChildScrollView _projectList(List<Project> projects) {
+  SingleChildScrollView _projectList(
+    List<Project> projects,
+    Project? selected,
+  ) {
     return SingleChildScrollView(
       scrollDirection: .horizontal,
       child: Row(
@@ -161,10 +183,10 @@ class _TimerPageState extends ConsumerState<TimerPage> {
           for (final project in projects)
             ChoiceChip(
               label: Text(project.name),
-              selected: selectedProject?.id == project.id,
-              onSelected: (selected) {
+              selected: selected?.id == project.id,
+              onSelected: (isSelected) {
                 setState(() {
-                  selectedProject = selected ? project : null;
+                  selectedProject = isSelected ? project : null;
                 });
               },
               backgroundColor: hexToColor(project.color).withValues(alpha: 0.3),
@@ -173,6 +195,30 @@ class _TimerPageState extends ConsumerState<TimerPage> {
         ],
       ),
     );
+  }
+
+  /// Mostrado quando todas as opções foram ocultadas nas configurações.
+  Widget _noVisibleProjectsHint() {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          'Nenhum projeto visível no cronômetro.',
+          style: TextStyle(fontSize: 13),
+        ),
+        TextButton(
+          onPressed: _openProjectsSettings,
+          child: Text('Escolher projetos'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openProjectsSettings() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (context) => ProjectsSettings()));
   }
 
   Widget _buildSuggestions(List<TimeEntry> entries, List<Project> projects) {
@@ -307,7 +353,7 @@ class _TimerPageState extends ConsumerState<TimerPage> {
     );
   }
 
-  Row _textFieldBar(bool isTimerRunning, bool isLoading) {
+  Row _textFieldBar(bool isTimerRunning, bool isLoading, Project? selected) {
     return Row(
       spacing: 20,
       children: [
@@ -326,8 +372,8 @@ class _TimerPageState extends ConsumerState<TimerPage> {
         isLoading
             ? const CircularProgressIndicator()
             : TextButton(
-                onPressed: (isTimerRunning || selectedProject != null)
-                    ? _handleStartStop
+                onPressed: (isTimerRunning || selected != null)
+                    ? () => _handleStartStop(selected)
                     : null,
                 child: Text(isTimerRunning ? 'Parar' : 'Começar'),
               ),

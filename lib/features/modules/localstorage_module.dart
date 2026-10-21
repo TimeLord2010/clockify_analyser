@@ -39,6 +39,15 @@ class LocalStorageModule {
     customHourlyRates = rates;
   }
 
+  /// Projetos que o usuário ocultou do seletor do cronômetro.
+  static Set<String> get hiddenProjectIds {
+    return _sp.getStringList('hidden_project_ids')?.toSet() ?? <String>{};
+  }
+
+  static void setHiddenProjectIds(Set<String> projectIds) {
+    _sp.setStringList('hidden_project_ids', projectIds.toList());
+  }
+
   static String? get lastSelectedWorkspaceId {
     return _sp.getString('last_selected_workspace_id');
   }

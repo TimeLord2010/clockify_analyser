@@ -4,6 +4,7 @@ import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/molecules/workspace/workspace_picker.dart';
 import 'package:clockify/ui/protocols/remove_api_key.dart';
+import 'package:clockify/ui/providers/hidden_projects_provider.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
 import 'package:flutter/material.dart';
@@ -162,6 +163,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
 
   Widget _projectsHourly(User? selectedUser) {
     var projects = ref.watch(projectsProvider);
+    var hiddenProjectIds = ref.watch(hiddenProjectIdsProvider);
 
     if (selectedUser == null) {
       return Center(child: Text('Selecione um usuário'));
@@ -188,13 +190,54 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
 
     projects.sortByString((x) => x.name);
 
-    return SingleChildScrollView(
-      child: Wrap(
-        spacing: 20,
-        runSpacing: 20,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _visibilityHeader(hiddenProjectIds),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Wrap(
+              spacing: 20,
+              runSpacing: 20,
+              children: [
+                for (var project in projects)
+                  _projectSection(project: project, userId: selectedUser.id),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Explica o toggle de visibilidade e oferece desfazer em massa.
+  Widget _visibilityHeader(Set<String> hiddenProjectIds) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Row(
         children: [
-          for (var project in projects)
-            _projectSection(project: project, userId: selectedUser.id),
+          Expanded(
+            child: Text(
+              'Desmarque "Mostrar no cronômetro" para esconder o projeto do '
+              'seletor do timer.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          if (hiddenProjectIds.isNotEmpty) ...[
+            Gap(12),
+            Text(
+              '${hiddenProjectIds.length} oculto${hiddenProjectIds.length > 1 ? 's' : ''}',
+              style: const TextStyle(fontSize: 12),
+            ),
+            TextButton(
+              onPressed: () =>
+                  ref.read(hiddenProjectIdsProvider.notifier).showAll(),
+              child: const Text('Mostrar todos'),
+            ),
+          ],
         ],
       ),
     );
@@ -203,7 +246,7 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
   Widget _projectSection({required Project project, required String userId}) {
     var controller = controllers[project]!;
     return SizedBox(
-      width: 200,
+      width: 220,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -220,6 +263,35 @@ class ProjectsSettingsState extends ConsumerState<ProjectsSettings> {
             project: project,
             controller: controller,
             userId: userId,
+          ),
+          _visibilityToggle(project),
+        ],
+      ),
+    );
+  }
+
+  /// Toggle que controla se o projeto aparece no seletor do cronômetro.
+  Widget _visibilityToggle(Project project) {
+    var hidden = ref.watch(hiddenProjectIdsProvider).contains(project.id);
+    return InkWell(
+      onTap: () => ref
+          .read(hiddenProjectIdsProvider.notifier)
+          .setHidden(project.id, !hidden),
+      child: Row(
+        children: [
+          Checkbox(
+            value: !hidden,
+            onChanged: (value) => ref
+                .read(hiddenProjectIdsProvider.notifier)
+                .setHidden(project.id, !(value ?? false)),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
+          Expanded(
+            child: Text(
+              'Mostrar no cronômetro',
+              style: TextStyle(fontSize: 12),
+            ),
           ),
         ],
       ),
