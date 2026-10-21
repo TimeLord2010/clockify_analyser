@@ -6,8 +6,16 @@ import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 import 'package:vit_dart_extensions/vit_dart_extensions.dart';
 
 class TotalGainByProject extends StatefulWidget {
-  const TotalGainByProject({super.key, required this.gainManager});
+  const TotalGainByProject({
+    super.key,
+    required this.gainManager,
+    this.trailing,
+  });
   final TimeEntriesGainManager gainManager;
+
+  /// Optional widget rendered on the same line as the daily average, so it
+  /// shares that block's vertical alignment instead of the whole bar's.
+  final Widget? trailing;
 
   @override
   State<TotalGainByProject> createState() => _TotalGainByProjectState();
@@ -34,9 +42,13 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
 
   @override
   Widget build(BuildContext context) {
-    // If no time entries, return an empty container
+    // If no time entries, keep the trailing action reachable (it explains the
+    // empty state) but drop the charts.
     if (totalDuration == Duration.zero) {
-      return const SizedBox.shrink();
+      return Align(
+        alignment: Alignment.centerRight,
+        child: widget.trailing ?? const SizedBox.shrink(),
+      );
     }
 
     final totalGain = widget.gainManager.totalGain;
@@ -51,6 +63,7 @@ class _TotalGainByProjectState extends State<TotalGainByProject> {
               children: [
                 Expanded(child: _barGraph()),
                 _meanByDay(),
+                if (widget.trailing != null) widget.trailing!,
               ],
             ),
           ),

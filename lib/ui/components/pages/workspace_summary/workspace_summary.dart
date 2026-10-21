@@ -92,13 +92,9 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 5),
       height: 68,
-      child: Row(
-        spacing: 16,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(child: TotalGainByProject(gainManager: gainManager)),
-          _reportButton(),
-        ],
+      child: TotalGainByProject(
+        gainManager: gainManager,
+        trailing: _reportButton(),
       ),
     );
   }
@@ -109,27 +105,36 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
     final compact = MediaQuery.sizeOf(context).width < 520;
     final icon = _isGeneratingReport
         ? const SizedBox(
-            width: 16,
-            height: 16,
+            width: 14,
+            height: 14,
             child: CircularProgressIndicator(strokeWidth: 2),
           )
-        : const Icon(Icons.picture_as_pdf_outlined, size: 18);
+        : const Icon(Icons.picture_as_pdf_outlined, size: 16);
 
-    return Center(
-      child: compact
-          ? IconButton.filledTonal(
-              onPressed: _isGeneratingReport ? null : _generateReport,
-              tooltip: 'Gerar relatório em PDF',
-              icon: icon,
-            )
-          : FilledButton.tonalIcon(
-              onPressed: _isGeneratingReport ? null : _generateReport,
-              icon: icon,
-              label: Text(
-                _isGeneratingReport ? 'Gerando…' : 'Relatório PDF',
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
+    if (compact) {
+      return IconButton.filledTonal(
+        onPressed: _isGeneratingReport ? null : _generateReport,
+        tooltip: 'Gerar relatório em PDF',
+        icon: icon,
+        visualDensity: VisualDensity.compact,
+        constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+        padding: EdgeInsets.zero,
+      );
+    }
+
+    return FilledButton.tonalIcon(
+      onPressed: _isGeneratingReport ? null : _generateReport,
+      icon: icon,
+      label: Text(
+        _isGeneratingReport ? 'Gerando…' : 'Relatório PDF',
+        style: const TextStyle(fontSize: 12),
+      ),
+      style: FilledButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        minimumSize: const Size(0, 32),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
     );
   }
 
