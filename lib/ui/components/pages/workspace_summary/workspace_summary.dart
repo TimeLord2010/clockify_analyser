@@ -1,5 +1,9 @@
 import 'package:clockify/features/modules/localstorage_module.dart';
+import 'package:clockify/features/reports/report_data.dart';
+import 'package:clockify/features/reports/report_exporter.dart';
+import 'package:clockify/features/reports/report_pdf.dart';
 import 'package:clockify/features/repositories/time_entries_gain_manager.dart';
+import 'package:clockify/services/logger.dart';
 import 'package:clockify/ui/components/atoms/selected_date_range_picker.dart';
 import 'package:clockify/ui/components/atoms/selected_user_picker.dart';
 import 'package:clockify/ui/components/molecules/cumulative_hours_chart.dart';
@@ -7,8 +11,10 @@ import 'package:clockify/ui/components/molecules/grouped_entries_chart.dart';
 import 'package:clockify/ui/components/molecules/total_by_day.dart';
 import 'package:clockify/ui/components/molecules/total_gain_by_project.dart';
 import 'package:clockify/ui/components/molecules/trending_times.dart';
+import 'package:clockify/ui/providers/date_range_provider.dart';
 import 'package:clockify/ui/providers/projects_provider.dart';
 import 'package:clockify/ui/providers/selected_user_provider.dart';
+import 'package:clockify/ui/providers/selected_workspace_provider.dart';
 import 'package:clockify/ui/providers/time_entries_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,6 +30,9 @@ class WorkspaceSummary extends ConsumerStatefulWidget {
 
 class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
   bool _showHeatmap = false;
+  bool _isGeneratingReport = false;
+
+  final logger = createLogger('WorkspaceSummary');
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +63,7 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
 
   Widget _buildContent(
     BuildContext context,
-    List<dynamic> entries,
+    List<TimeEntry> entries,
     TimeEntriesGainManager gainManager,
     Map<String, Project> projectMap,
   ) {
@@ -83,8 +92,115 @@ class _WorkspaceSummaryState extends ConsumerState<WorkspaceSummary> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 5),
       height: 68,
-      child: TotalGainByProject(gainManager: gainManager),
+      child: Row(
+        spacing: 10,
+        children: [
+          Expanded(child: TotalGainByProject(gainManager: gainManager)),
+          _reportButton(),
+        ],
+      ),
     );
+  }
+
+  /// Generates the PDF report for the period shown on this screen.
+  Widget _reportButton() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Keep the label only when the bar has room for it.
+        final compact = MediaQuery.sizeOf(context).width < 520;
+        final icon = _isGeneratingReport
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.picture_as_pdf_outlined, size: 18);
+
+        if (compact) {
+          return IconButton.filledTonal(
+            onPressed: _isGeneratingReport ? null : _generateReport,
+            tooltip: 'Gerar relatório em PDF',
+            icon: icon,
+          );
+        }
+
+        return FilledButton.tonalIcon(
+          onPressed: _isGeneratingReport ? null : _generateReport,
+          icon: icon,
+          label: Text(
+            _isGeneratingReport ? 'Gerando…' : 'Relatório PDF',
+            style: const TextStyle(fontSize: 12),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _generateReport() async {
+    if (_isGeneratingReport) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _isGeneratingReport = true);
+
+    try {
+      final entries =
+          ref.read(mergedTimeEntriesForWorkspaceProvider).valueOrNull ??
+          const <TimeEntry>[];
+      final projects = ref.read(projectsProvider);
+      final user = ref.read(selectedUserProvider);
+      final workspace = ref.read(selectedWorkspaceProvider).valueOrNull;
+      final range = ref.read(dateRangeProvider);
+
+      final data = buildReportData(
+        entries: entries,
+        projects: projects,
+        customHourlyRates: LocalStorageModule.customHourlyRates,
+        workspaceName: workspace?.name ?? 'Workspace',
+        userName: user?.name ?? 'Todos os usuários',
+        startDate: range.startDate,
+        endDate: range.endDate,
+        currentUserId: user?.id,
+      );
+
+      if (data.isEmpty) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Nenhuma hora registrada no período selecionado.'),
+          ),
+        );
+        return;
+      }
+
+      final bytes = await buildReportPdf(data);
+      final fileName =
+          'relatorio-${_fileDate(data.startDate)}_${_fileDate(data.endDate)}.pdf';
+      final destination = await saveReportFile(bytes, fileName);
+
+      logger.i(
+        'Relatório gerado: $fileName '
+        '(${data.projects.length} projetos, ${data.entryCount} registros)',
+      );
+      messenger.showSnackBar(
+        SnackBar(content: Text('Relatório gerado: $destination')),
+      );
+    } catch (error, stackTrace) {
+      logger.e(
+        'Falha ao gerar relatório',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      messenger.showSnackBar(
+        SnackBar(content: Text('Falha ao gerar relatório: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _isGeneratingReport = false);
+    }
+  }
+
+  String _fileDate(DateTime date) {
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
   }
 
   Align _toggleChartButton() {

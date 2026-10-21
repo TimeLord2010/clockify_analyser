@@ -1,5 +1,6 @@
 import 'package:clockify/features/usecases/color/color_to_hex.dart';
 import 'package:clockify/features/usecases/date/brazilian_holidays.dart';
+import 'package:clockify/features/usecases/project/hourly_rate_for_project.dart';
 import 'package:flutter/material.dart';
 import 'package:vit_clockify_sdk/vit_clockify_sdk.dart';
 
@@ -24,35 +25,12 @@ class TimeEntriesGainManager {
 
   /// Determines the appropriate hourly rate for a project
   HourlyRate getHourlyRateForProject(Project project) {
-    // Get entries for this project
-    final projectEntries = timeEntries
-        .where((entry) => entry.projectId == project.id)
-        .toList();
-
-    var customHourlyRate = customHourlyRates[project.id];
-    // Check custom hourly rate
-    if (customHourlyRate != null && customHourlyRate > 0) {
-      return HourlyRate(amount: customHourlyRate);
-    }
-
-    // Check project membership hourly rate for current user
-    if (currentUserId != null) {
-      try {
-        final membership = project.memberships.firstWhere(
-          (m) => m.userId == currentUserId,
-        );
-        if (membership.hourlyRate.amount > 0) {
-          return membership.hourlyRate;
-        }
-      } catch (e) {
-        // No membership found for current user
-      }
-    }
-
-    // Fallback to first entry's hourly rate (even if 0)
-    return projectEntries.isNotEmpty
-        ? projectEntries.first.hourlyRate
-        : HourlyRate(amount: 0);
+    return hourlyRateForProject(
+      project: project,
+      timeEntries: timeEntries,
+      customHourlyRates: customHourlyRates,
+      currentUserId: currentUserId,
+    );
   }
 
   /// Calculates gain for a specific project

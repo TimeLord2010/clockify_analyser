@@ -18,10 +18,12 @@ dependencies:
   gap: ^3.0.1
   get_it: ^8.0.3
   logger: ^2.6.1
+  pdf: ^3.11.3
   shared_preferences: ^2.5.3
   vit_dart_extensions: ^3.0.1
   vit_clockify_sdk:
     path: ../vit_clockify_sdk
+  web: ^1.1.1
 
 dev_dependencies:
   flutter_test:
