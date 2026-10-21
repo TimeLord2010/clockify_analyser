@@ -62,9 +62,7 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
       child: Column(
         children: [
           TabBar(
-            tabs: [
-              for (final day in days) Tab(text: _tabLabel(day, today)),
-            ],
+            tabs: [for (final day in days) Tab(text: _tabLabel(day, today))],
           ),
           Expanded(
             child: TabBarView(
@@ -84,17 +82,13 @@ class _TimeEntriesPageState extends ConsumerState<TimeEntriesPage> {
   }
 
   List<TimeEntry> _entriesForDay(List<TimeEntry> entries, DateTime day) {
-    return entries
-        .where((entry) {
-          final start = entry.timeInterval.start;
-          return start.year == day.year &&
-              start.month == day.month &&
-              start.day == day.day;
-        })
-        .toList()
-      ..sort(
-        (a, b) => b.timeInterval.start.compareTo(a.timeInterval.start),
-      );
+    return entries.where((entry) {
+        final start = entry.timeInterval.start;
+        return start.year == day.year &&
+            start.month == day.month &&
+            start.day == day.day;
+      }).toList()
+      ..sort((a, b) => b.timeInterval.start.compareTo(a.timeInterval.start));
   }
 
   String _tabLabel(DateTime day, DateTime today) {

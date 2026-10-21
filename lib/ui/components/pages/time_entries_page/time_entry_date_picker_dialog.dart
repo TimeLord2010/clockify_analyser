@@ -208,10 +208,7 @@ class _DatePicker extends StatelessWidget {
 }
 
 class _TimePicker extends StatelessWidget {
-  const _TimePicker({
-    required this.label,
-    required this.onTap,
-  });
+  const _TimePicker({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
@@ -229,10 +226,7 @@ class _TimePicker extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16),
-            ),
+            Text(label, style: const TextStyle(fontSize: 16)),
             const Icon(Icons.access_time, size: 20),
           ],
         ),

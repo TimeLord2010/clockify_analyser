@@ -48,7 +48,8 @@ class WeeklyEarningsChart extends StatelessWidget {
                 reservedSize: 28,
                 getTitlesWidget: (value, meta) {
                   final i = value.toInt();
-                  if (i < 0 || i >= weeks.length) return const SizedBox.shrink();
+                  if (i < 0 || i >= weeks.length)
+                    return const SizedBox.shrink();
                   final w = weeks[i];
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
@@ -65,10 +66,8 @@ class WeeklyEarningsChart extends StatelessWidget {
             show: true,
             drawVerticalLine: false,
             horizontalInterval: maxGain > 0 ? maxGain / 4 : 1,
-            getDrawingHorizontalLine: (value) => FlLine(
-              color: Colors.grey.shade200,
-              strokeWidth: 1,
-            ),
+            getDrawingHorizontalLine: (value) =>
+                FlLine(color: Colors.grey.shade200, strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           barTouchData: BarTouchData(
@@ -107,21 +106,25 @@ class WeeklyEarningsChart extends StatelessWidget {
     final byWeek = <DateTime, List<TimeEntry>>{};
     for (final entry in gainManager.timeEntries) {
       final start = entry.timeInterval.start;
-      final weekStart = DateTime(start.year, start.month, start.day)
-          .subtract(Duration(days: start.weekday - 1));
+      final weekStart = DateTime(
+        start.year,
+        start.month,
+        start.day,
+      ).subtract(Duration(days: start.weekday - 1));
       byWeek.putIfAbsent(weekStart, () => []).add(entry);
     }
 
     return byWeek.entries
-        .map((e) => _WeekData(
-              weekStart: e.key,
-              totalGain: _computeGain(e.value),
-              totalDuration: e.value.fold(
-                Duration.zero,
-                (d, entry) =>
-                    d + (entry.timeInterval.duration ?? Duration.zero),
-              ),
-            ))
+        .map(
+          (e) => _WeekData(
+            weekStart: e.key,
+            totalGain: _computeGain(e.value),
+            totalDuration: e.value.fold(
+              Duration.zero,
+              (d, entry) => d + (entry.timeInterval.duration ?? Duration.zero),
+            ),
+          ),
+        )
         .toList()
       ..sort((a, b) => a.weekStart.compareTo(b.weekStart));
   }

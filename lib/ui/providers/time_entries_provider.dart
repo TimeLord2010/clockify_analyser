@@ -159,8 +159,8 @@ class RecentlyStoppedEntriesNotifier extends StateNotifier<List<TimeEntry>> {
 
 final recentlyStoppedEntriesProvider =
     StateNotifierProvider<RecentlyStoppedEntriesNotifier, List<TimeEntry>>(
-  (ref) => RecentlyStoppedEntriesNotifier(),
-);
+      (ref) => RecentlyStoppedEntriesNotifier(),
+    );
 
 List<TimeEntry> _mergeEntries(
   List<TimeEntry> recent,
@@ -172,27 +172,29 @@ List<TimeEntry> _mergeEntries(
 
 final mergedTimeEntriesForWorkspaceProvider =
     Provider<AsyncValue<List<TimeEntry>>>((ref) {
-  final fetched = ref.watch(timeEntriesForWorkspaceProvider);
-  final recent = ref.watch(recentlyStoppedEntriesProvider);
-  return fetched.when(
-    data: (entries) => AsyncValue.data(_mergeEntries(recent, entries)),
-    loading: () =>
-        recent.isNotEmpty ? AsyncValue.data(recent) : const AsyncValue.loading(),
-    error: (e, s) => AsyncValue.error(e, s),
-  );
-});
+      final fetched = ref.watch(timeEntriesForWorkspaceProvider);
+      final recent = ref.watch(recentlyStoppedEntriesProvider);
+      return fetched.when(
+        data: (entries) => AsyncValue.data(_mergeEntries(recent, entries)),
+        loading: () => recent.isNotEmpty
+            ? AsyncValue.data(recent)
+            : const AsyncValue.loading(),
+        error: (e, s) => AsyncValue.error(e, s),
+      );
+    });
 
 final mergedTimeEntriesLast7DaysProvider =
     Provider<AsyncValue<List<TimeEntry>>>((ref) {
-  final fetched = ref.watch(timeEntriesLast7DaysProvider);
-  final recent = ref.watch(recentlyStoppedEntriesProvider);
-  return fetched.when(
-    data: (entries) => AsyncValue.data(_mergeEntries(recent, entries)),
-    loading: () =>
-        recent.isNotEmpty ? AsyncValue.data(recent) : const AsyncValue.loading(),
-    error: (e, s) => AsyncValue.error(e, s),
-  );
-});
+      final fetched = ref.watch(timeEntriesLast7DaysProvider);
+      final recent = ref.watch(recentlyStoppedEntriesProvider);
+      return fetched.when(
+        data: (entries) => AsyncValue.data(_mergeEntries(recent, entries)),
+        loading: () => recent.isNotEmpty
+            ? AsyncValue.data(recent)
+            : const AsyncValue.loading(),
+        error: (e, s) => AsyncValue.error(e, s),
+      );
+    });
 
 // Provider for time entries from the last 7 days
 final timeEntriesLast7DaysProvider = FutureProvider<List<TimeEntry>>((

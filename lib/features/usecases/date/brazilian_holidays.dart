@@ -23,7 +23,7 @@ Set<DateTime> getBrazilianHolidays(int year) {
     DateTime(year, 11, 15),
     DateTime(year, 12, 25),
     easter.subtract(const Duration(days: 2)), // Sexta-feira Santa
-    easter.add(const Duration(days: 60)),     // Corpus Christi
+    easter.add(const Duration(days: 60)), // Corpus Christi
   };
 
   if (year >= 2024) holidays.add(DateTime(year, 11, 20));

@@ -54,10 +54,7 @@ class _TimeEntryDescriptionDialogState
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancelar'),
         ),
-        ElevatedButton(
-          onPressed: _save,
-          child: const Text('Salvar'),
-        ),
+        ElevatedButton(onPressed: _save, child: const Text('Salvar')),
       ],
     );
   }

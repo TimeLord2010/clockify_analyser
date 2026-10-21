@@ -13,11 +13,7 @@ class RunningTimerState {
   final bool isLoading;
   final String? error;
 
-  const RunningTimerState({
-    this.entry,
-    this.isLoading = false,
-    this.error,
-  });
+  const RunningTimerState({this.entry, this.isLoading = false, this.error});
 
   bool get hasRunningTimer => entry != null;
 
@@ -69,10 +65,14 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
 
       state = RunningTimerState(entry: runningTimer);
       _logger.i(
-          'Running timer check: ${runningTimer != null ? "Found (${runningTimer.description})" : "None"}');
+        'Running timer check: ${runningTimer != null ? "Found (${runningTimer.description})" : "None"}',
+      );
     } catch (e, stack) {
-      _logger.e('Error checking for running timer',
-          error: e, stackTrace: stack);
+      _logger.e(
+        'Error checking for running timer',
+        error: e,
+        stackTrace: stack,
+      );
       state = RunningTimerState(error: e.toString());
     }
   }
@@ -151,5 +151,5 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
 
 final runningTimerProvider =
     StateNotifierProvider<RunningTimerNotifier, RunningTimerState>(
-  (ref) => RunningTimerNotifier(ref),
-);
+      (ref) => RunningTimerNotifier(ref),
+    );
