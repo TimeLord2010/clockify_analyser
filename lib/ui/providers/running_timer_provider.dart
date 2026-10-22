@@ -33,10 +33,31 @@ class RunningTimerState {
 
 class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
   RunningTimerNotifier(this.ref) : super(const RunningTimerState()) {
+    _listenToTimerContext();
     _initialize();
   }
 
   final Ref ref;
+
+  /// Identifica a consulta mais recente feita ao Clockify. Respostas atrasadas
+  /// (de uma consulta antiga ou de antes de um start/stop) são descartadas,
+  /// para não sobrescrever o estado atual com informação velha.
+  int _requestId = 0;
+
+  /// O cronômetro monitorado depende do workspace e do usuário selecionados.
+  /// Trocar qualquer um dos dois invalida o estado anterior, então relemos.
+  void _listenToTimerContext() {
+    ref.listen(selectedWorkspaceProvider, (previous, next) {
+      if (previous?.value?.id != next.value?.id) {
+        checkForRunningTimer();
+      }
+    });
+    ref.listen(selectedUserProvider, (previous, next) {
+      if (previous?.id != next?.id) {
+        checkForRunningTimer();
+      }
+    });
+  }
 
   Future<void> _initialize() async {
     // Check for existing running timer on startup
@@ -45,6 +66,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
 
   /// Checks if there's a running timer for the current user
   Future<void> checkForRunningTimer() async {
+    final requestId = ++_requestId;
     try {
       state = state.copyWith(isLoading: true);
 
@@ -54,6 +76,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
       final workspace = workspaceAsync.value;
 
       if (workspace == null || user == null) {
+        if (requestId != _requestId) return;
         state = const RunningTimerState();
         return;
       }
@@ -62,6 +85,9 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
         workspaceId: workspace.id,
         userId: user.id,
       );
+
+      // Uma consulta mais nova (ou um start/stop) já aconteceu: descarta.
+      if (requestId != _requestId) return;
 
       state = RunningTimerState(entry: runningTimer);
       _logger.i(
@@ -73,6 +99,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
         error: e,
         stackTrace: stack,
       );
+      if (requestId != _requestId) return;
       state = RunningTimerState(error: e.toString());
     }
   }
@@ -82,6 +109,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
     required String projectId,
     String? description,
   }) async {
+    ++_requestId; // invalida consultas pendentes
     try {
       state = state.copyWith(isLoading: true);
 
@@ -92,6 +120,21 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
 
       if (workspace == null || user == null) {
         throw Exception('Workspace or user not selected');
+      }
+
+      // Pode já existir um cronômetro rodando que este app não conhece (foi
+      // iniciado no site/app do Clockify). Nesse caso adotamos o que está
+      // rodando em vez de criar um segundo lançamento em aberto.
+      final existing = await VitClockify.timeEntries.getRunningTimer(
+        workspaceId: workspace.id,
+        userId: user.id,
+      );
+      if (existing != null) {
+        state = RunningTimerState(entry: existing);
+        _logger.i(
+          'Timer already running outside the app, adopting it: ${existing.id}',
+        );
+        return;
       }
 
       final request = TimeEntryRequest(
@@ -117,6 +160,7 @@ class RunningTimerNotifier extends StateNotifier<RunningTimerState> {
     final currentEntry = state.entry;
     if (currentEntry == null) return;
 
+    ++_requestId; // invalida consultas pendentes
     try {
       state = state.copyWith(isLoading: true);
 

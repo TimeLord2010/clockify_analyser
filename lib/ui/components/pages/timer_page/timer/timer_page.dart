@@ -21,16 +21,41 @@ class TimerPage extends ConsumerStatefulWidget {
   ConsumerState<TimerPage> createState() => _TimerPageState();
 }
 
-class _TimerPageState extends ConsumerState<TimerPage> {
+class _TimerPageState extends ConsumerState<TimerPage>
+    with WidgetsBindingObserver {
   Project? selectedProject;
   final descriptionController = TextEditingController();
 
   var logger = createLogger('TimerPage');
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // O cronômetro pode ter sido iniciado ou parado fora da aplicação (site/app
+    // do Clockify). Toda visita a esta página relê o estado real da API antes de
+    // mostrar "Começar"/"Parar".
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(runningTimerProvider.notifier).checkForRunningTimer();
+    });
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     descriptionController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Voltou o foco para a aba/app: o cronômetro pode ter mudado enquanto
+    // estávamos fora.
+    if (state == AppLifecycleState.resumed) {
+      ref.read(runningTimerProvider.notifier).checkForRunningTimer();
+    }
   }
 
   /// Gets the hourly rate for the current user on the selected project
