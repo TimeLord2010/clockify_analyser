@@ -53,44 +53,79 @@ final timeEntriesProvider =
       ) = params;
       end = DateTime(end.year, end.month, end.day, 23, 59, 59);
       final segments = _computeSegments(start, end);
+      final settledUntil = _settledUntil();
       final List<TimeEntry> result = [];
       for (final seg in segments) {
-        if (seg.isFullMonth) {
-          // try cache for full month
-          final cached = LocalStorageModule.getTimeEntriesFromUser(
-            workspaceId: workspaceId,
-            userId: userId,
-            year: seg.year,
-            month: seg.month,
+        final monthStart = DateTime(seg.year, seg.month, 1);
+        final cached = LocalStorageModule.getTimeEntriesFromUser(
+          workspaceId: workspaceId,
+          userId: userId,
+          year: seg.year,
+          month: seg.month,
+        );
+        final cachedUntil = cached == null
+            ? null
+            : LocalStorageModule.getTimeEntriesCachedUntil(
+                workspaceId: workspaceId,
+                userId: userId,
+                year: seg.year,
+                month: seg.month,
+              );
+
+        // use the cache for the part of the segment it covers
+        var fetchFrom = seg.firstDay;
+        if (cached != null && cachedUntil != null) {
+          result.addAll(
+            cached.where(
+              (e) => _isWithin(e.timeInterval.start, seg.firstDay, seg.lastDay),
+            ),
           );
-          if (cached != null) {
-            result.addAll(cached);
-            continue;
-          }
+          if (!seg.lastDay.isAfter(cachedUntil)) continue;
+          final afterCache = cachedUntil.add(const Duration(seconds: 1));
+          if (afterCache.isAfter(fetchFrom)) fetchFrom = afterCache;
         }
 
-        // fetch from API for this segment
-
+        // fetch from API for the remaining part of this segment
         debugPrint(
-          'searching for entries between ${seg.firstDay} and ${seg.lastDay}',
+          'searching for entries between $fetchFrom and ${seg.lastDay}',
         );
         final fetched = await VitClockify.timeEntries.getForUser(
           workspaceId: workspaceId,
           userId: userId,
-          startDate: seg.firstDay,
+          startDate: fetchFrom,
           endDate: seg.lastDay,
         );
         result.addAll(fetched);
-        // cache if eligible and full month
-        var shouldCacheMonth = _shouldCacheMonth(seg.year, seg.month);
-        if (seg.isFullMonth && shouldCacheMonth) {
-          await LocalStorageModule.setTimeEntriesForUser(
-            workspaceId: workspaceId,
-            userId: userId,
-            year: seg.year,
-            month: seg.month,
-            entries: fetched,
-          );
+
+        // extend the cache with entries older than 5 days, as long as the
+        // cached data stays contiguous from the start of the month
+        final isContiguous =
+            fetchFrom.isAtSameMomentAs(monthStart) ||
+            (cachedUntil != null &&
+                !fetchFrom.isAfter(
+                  cachedUntil.add(const Duration(seconds: 1)),
+                ));
+        final newUntil = seg.lastDay.isBefore(settledUntil)
+            ? seg.lastDay
+            : settledUntil;
+        final isAdvancing =
+            !newUntil.isBefore(monthStart) &&
+            (cachedUntil == null || newUntil.isAfter(cachedUntil));
+        if (isContiguous && isAdvancing) {
+          final settled = fetched
+              .where((e) => !e.timeInterval.start.isAfter(newUntil))
+              .toList();
+          // a running timer is not settled yet
+          if (settled.every((e) => e.timeInterval.end != null)) {
+            await LocalStorageModule.setTimeEntriesForUser(
+              workspaceId: workspaceId,
+              userId: userId,
+              year: seg.year,
+              month: seg.month,
+              entries: [...?cached, ...settled],
+              cachedUntil: newUntil,
+            );
+          }
         }
       }
 
@@ -245,13 +280,14 @@ List<_MonthSegment> _computeSegments(DateTime firstDay, DateTime lastDay) {
   return segments;
 }
 
-/// Internal: determine if a month is at least 5 days in the past and not cached.
-bool _shouldCacheMonth(int year, int month) {
+/// Internal: last instant whose entries are old enough (5+ days) to be cached.
+DateTime _settledUntil() {
   final now = DateTime.now();
-  // month end date
-  final monthEnd = DateTime(year, month + 1, 0);
-  final diff = now.difference(monthEnd).inDays;
-  return diff >= 5;
+  return DateTime(now.year, now.month, now.day - 5, 23, 59, 59);
+}
+
+bool _isWithin(DateTime date, DateTime first, DateTime last) {
+  return !date.isBefore(first) && !date.isAfter(last);
 }
 
 /// Helper to represent a segment of a date range falling in a single month.
@@ -264,11 +300,4 @@ class _MonthSegment {
   _MonthSegment(this.firstDay, this.lastDay)
     : year = firstDay.year,
       month = firstDay.month;
-
-  bool get isFullMonth {
-    final monthStart = DateTime(year, month, 1);
-    final monthEnd = DateTime(year, month + 1, 0, 23, 59, 59);
-    return firstDay.isAtSameMomentAs(monthStart) &&
-        lastDay.isAtSameMomentAs(monthEnd);
-  }
 }

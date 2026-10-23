@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:clockify/features/modules/localstorage_module.dart';
 import 'package:clockify/ui/components/screens/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   var sp = await SharedPreferences.getInstance();
   GetIt.I.registerSingleton(sp);
+  await LocalStorageModule.pruneTimeEntriesCache();
 
   var elapsed = DateTime.now().millisecondsSinceEpoch - begin;
   debugPrint('Setup elapsed: ${elapsed}ms');

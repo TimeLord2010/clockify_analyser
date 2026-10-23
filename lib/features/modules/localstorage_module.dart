@@ -113,21 +113,73 @@ class LocalStorageModule {
     return [for (var item in list) TimeEntry.fromJson(jsonDecode(item))];
   }
 
+  /// Último instante do mês coberto pelo cache de entradas.
+  ///
+  /// Caches antigos (sem essa marca) só eram gravados para meses inteiros,
+  /// então são considerados completos até o fim do mês.
+  static DateTime? getTimeEntriesCachedUntil({
+    required String workspaceId,
+    required String userId,
+    required int year,
+    required int month,
+  }) {
+    var time = '$year-${month.toString().padLeft(2, '0')}';
+    var key = 'wks_$workspaceId:usr_$userId:$time';
+    if (!_sp.containsKey(key)) return null;
+    var until = _sp.getString('$key:until');
+    if (until == null) return DateTime(year, month + 1, 0, 23, 59, 59);
+    return DateTime.parse(until);
+  }
+
   static Future<void> setTimeEntriesForUser({
     required String workspaceId,
     required String userId,
     required int year,
     required int month,
     required List<TimeEntry>? entries,
+    DateTime? cachedUntil,
   }) async {
     var time = '$year-${month.toString().padLeft(2, '0')}';
     var key = 'wks_$workspaceId:usr_$userId:$time';
-    if (entries == null) {
+    if (entries == null || !_isInTimeEntriesCacheWindow(year, month)) {
       await _sp.remove(key);
+      await _sp.remove('$key:until');
       return;
     }
     await _sp.setStringList(key, [
       for (var entry in entries) jsonEncode(entry.toJson()),
     ]);
+    if (cachedUntil != null) {
+      await _sp.setString('$key:until', cachedUntil.toIso8601String());
+    } else {
+      await _sp.remove('$key:until');
+    }
+  }
+
+  /// Quantos meses (contando o atual) de entradas ficam em cache.
+  static const timeEntriesCacheMonths = 4;
+
+  static final _timeEntriesKeyPattern = RegExp(
+    r'^wks_.+:usr_.+:(\d{4})-(\d{2})(:until)?$',
+  );
+
+  static bool _isInTimeEntriesCacheWindow(int year, int month) {
+    final now = DateTime.now();
+    final monthsAgo = (now.year - year) * 12 + (now.month - month);
+    return monthsAgo < timeEntriesCacheMonths;
+  }
+
+  /// Remove o cache de entradas de meses fora da janela de
+  /// [timeEntriesCacheMonths], para o armazenamento não crescer sem limite.
+  static Future<void> pruneTimeEntriesCache() async {
+    for (final key in _sp.getKeys()) {
+      final match = _timeEntriesKeyPattern.firstMatch(key);
+      if (match == null) continue;
+      final year = int.parse(match.group(1)!);
+      final month = int.parse(match.group(2)!);
+      if (!_isInTimeEntriesCacheWindow(year, month)) {
+        await _sp.remove(key);
+      }
+    }
   }
 }
